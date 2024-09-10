@@ -1,0 +1,38 @@
+[
+  {
+    "id":1,
+    "name": "Industrial Estate"
+  },
+  {
+    "id":2,
+    "name": "Seethammadhara"
+  },
+  {
+    "id":3,
+    "name": "Vishalakshi Nagar"
+  },
+  {
+    "id":4,
+    "name": "Chinnamushidiwada"
+  },
+  {
+    "id":5,
+    "name": "Kakani Nagar"
+  },
+  {
+    "id":6,
+    "name": "Gajuwaka"
+  },
+  {
+    "id":7,
+    "name": "Srinagar"
+  },
+  {
+    "id":8,
+    "name": "Nakkapalli"
+  },
+  {
+    "id":9,
+    "name": "Yelamanchilli"
+  }
+]
