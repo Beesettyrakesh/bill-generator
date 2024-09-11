@@ -1,38 +1,56 @@
 [
   {
     "id":1,
-    "name": "Industrial Estate"
+    "name": "Seethammadhara",
+    "template": "HOURS",
+    "company": "Godavari Power Systems"
   },
   {
     "id":2,
-    "name": "Seethammadhara"
+    "name": "Chinnamushidiwada",
+    "template": "HOURS",
+    "company": "Godavari Power Systems"
   },
   {
     "id":3,
-    "name": "Vishalakshi Nagar"
+    "name": "Kakani Nagar",
+    "template": "START_AND_END",
+    "company": "Godavari Power Systems"
   },
   {
     "id":4,
-    "name": "Chinnamushidiwada"
+    "name": "Gajuwaka",
+    "template": "START_AND_END",
+    "company": "Godavari Power Systems"
   },
   {
     "id":5,
-    "name": "Kakani Nagar"
+    "name": "Srinagar",
+    "template": "HOURS",
+    "company": "Godavari Power Systems"
   },
   {
     "id":6,
-    "name": "Gajuwaka"
+    "name": "Yelamanchilli",
+    "template": "HOURS",
+    "company": "Godavari Power Systems"
   },
   {
     "id":7,
-    "name": "Srinagar"
+    "name": "Industrial Estate",
+    "template": "HOURS",
+    "company": "SRI SAI SABITHA ELECTRICALS"
   },
   {
     "id":8,
-    "name": "Nakkapalli"
+    "name": "Vishalakshi Nagar",
+    "template": "HOURS",
+    "company": "SRI SAI SABITHA ELECTRICALS"
   },
   {
     "id":9,
-    "name": "Yelamanchilli"
+    "name": "Nakkapalli",
+    "template": "HOURS",
+    "company": "SRI SAI SABITHA ELECTRICALS"
   }
 ]
