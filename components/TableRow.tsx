@@ -10,8 +10,16 @@ const TableRow = (props: TableRowProps) => {
             <tr className="bank-row">
                 <td>{props.branch.name}</td>
                 <td><input type="date"/></td>
-                <td><input type="text" placeholder="Enter start reading"/></td>
-                <td><input type="text" placeholder="Enter end reading"/></td>
+                {
+                    props.branch.template === "START_AND_END"
+                        ? <td><input type="text" placeholder="Enter start reading"/></td>
+                        : <td></td>
+                }
+                {
+                    props.branch.template === "START_AND_END"
+                        ? <td><input type="text" placeholder="Enter end reading"/></td>
+                        : <td></td>
+                }
                 <td><input type="text" placeholder="Enter no. of hrs"/></td>
                 <td><input type="text" placeholder="Enter fuel price"/></td>
                 <td><input type="text" placeholder="fuel/hr"/></td>
