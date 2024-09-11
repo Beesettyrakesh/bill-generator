@@ -1,4 +1,6 @@
 export interface BankBranchInterface {
     id: number,
-    name: string
+    name: string,
+    template: string,
+    company: string,
 }
