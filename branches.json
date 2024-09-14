@@ -3,37 +3,37 @@
     "id":1,
     "name": "Seethammadhara",
     "template": "HOURS",
-    "company": "Godavari Power Systems"
+    "company": "GODAVARI POWER SYSTEMS"
   },
   {
     "id":2,
     "name": "Chinnamushidiwada",
     "template": "HOURS",
-    "company": "Godavari Power Systems"
+    "company": "GODAVARI POWER SYSTEMS"
   },
   {
     "id":3,
     "name": "Kakani Nagar",
     "template": "START_AND_END",
-    "company": "Godavari Power Systems"
+    "company": "GODAVARI POWER SYSTEMS"
   },
   {
     "id":4,
     "name": "Gajuwaka",
     "template": "START_AND_END",
-    "company": "Godavari Power Systems"
+    "company": "GODAVARI POWER SYSTEMS"
   },
   {
     "id":5,
-    "name": "Srinagar",
+    "name": "Srinagar(Gajuwaka)",
     "template": "HOURS",
-    "company": "Godavari Power Systems"
+    "company": "GODAVARI POWER SYSTEMSs"
   },
   {
     "id":6,
     "name": "Yelamanchilli",
     "template": "HOURS",
-    "company": "Godavari Power Systems"
+    "company": "GODAVARI POWER SYSTEMS"
   },
   {
     "id":7,
