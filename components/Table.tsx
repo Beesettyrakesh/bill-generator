@@ -15,9 +15,7 @@ const Table = () => {
                     <th>End reading</th>
                     <th>Total Hours</th>
                     <th>Fuel Price</th>
-                    <th>Fuel consumption/Hour</th>
                     <th>Total</th>
-                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
