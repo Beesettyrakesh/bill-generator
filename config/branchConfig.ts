@@ -1,47 +1,56 @@
 export const branchConfig= {
   "Seethammadhara": {
-    "company": "Godavari Power Systems",
+    "company": "GODAVARI POWER SYSTEMS",
     "template": "HOURS",
-    "genSetCapacity": "62.5 KVA"
+    "genCapacity": "62.5 KVA",
+    "consumption": 10.92,
   },
   "Chinamushidiwada" : {
-    "company": "Godavari Power Systems",
+    "company": "GODAVARI POWER SYSTEMS",
     "template": "HOURS",
-    "genSetCapacity": "50 KVA"
+    "genCapacity": "50 KVA",
+    "consumption": 10.19,
   },
   "Kakani Nagar": {
-    "company": "Godavari Power Systems",
+    "company": "GODAVARI POWER SYSTEMS",
     "template": "START_AND_END",
-    "genSetCapacity": "20 KVA"
+    "genCapacity": "20 KVA",
+    "consumption": 4.78,
   },
   "Gajuwaka" : {
-    "company": "Godavari Power Systems",
+    "company": "GODAVARI POWER SYSTEMS",
     "template": "START_AND_END",
-    "genSetCapacity": "62.5 KVA"
+    "genCapacity": "62.5 KVA",
+    "consumption": 10.92,
   },
   "Srinagar(Gajuwaka)": {
-    "company": "Godavari Power Systems",
+    "company": "GODAVARI POWER SYSTEMS",
     "template": "HOURS",
-    "genSetCapacity": "35 KVA"
+    "genCapacity": "35 KVA",
+    "consumption": 7.35,
   },
-  "Yellamanchilli": {
-    "company": "Godavari Power Systems",
+  "Yellamanchalli": {
+    "company": "GODAVARI POWER SYSTEMS",
     "template": "HOURS",
-    "genSetCapacity": "40 KVA"
+    "genCapacity": "40 KVA",
+    "consumption": 8.11,
   },
   "Industrial Estate": {
     "company": "SRI SAI SABITHA ELECTRICALS",
     "template": "HOURS",
-    "genSetCapacity": "62.5 KVA"
+    "genCapacity": "62.5 KVA",
+    "consumption": 10.92,
   },
   "Vishalakshi Nagar": {
     "company": "SRI SAI SABITHA ELECTRICALS",
     "template": "HOURS",
-    "genSetCapacity": "15 KVA"
+    "genCapacity": "15 KVA",
+    "consumption": 2.91,
   },
   "Nakkapalli": {
     "company": "SRI SAI SABITHA ELECTRICALS",
     "template": "HOURS",
-    "genSetCapacity": "20 KVA"
-  },
+    "genCapacity": "20 KVA",
+    "consumption": 4.78,
+  }
 }
