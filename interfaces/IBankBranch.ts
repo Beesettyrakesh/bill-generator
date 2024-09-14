@@ -1,4 +1,4 @@
-export interface BankBranchInterface {
+export interface IBankBranch {
     id: number,
     name: string,
     template: string,
