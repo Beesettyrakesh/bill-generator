@@ -1,0 +1,177 @@
+# Technical Context: Bill Generator
+
+## Technology Stack
+
+### Frontend Framework
+- **Next.js**: React framework for server-side rendering and static site generation
+- **React**: UI component library for building the user interface
+- **TypeScript**: Typed superset of JavaScript for improved developer experience and code quality
+
+### Styling
+- **CSS Modules**: Component-scoped CSS to prevent style conflicts
+- **Tailwind CSS**: Utility-first CSS framework for rapid UI development
+
+### Document Processing
+- **Docxtemplater**: Library for generating DOCX documents from templates
+- **PizZip**: Library for working with ZIP files (used by Docxtemplater)
+- **File-saver**: Library for saving files on the client-side
+
+### State Management
+- **React Context API**: Built-in React state management for sharing state between components
+
+### Testing
+- **Jest**: JavaScript testing framework
+- **React Testing Library**: Testing utilities for React components
+
+## Key Dependencies
+
+```json
+{
+  "dependencies": {
+    "docxtemplater": "^3.x.x",
+    "file-saver": "^2.x.x",
+    "next": "^13.x.x",
+    "pizzip": "^3.x.x",
+    "react": "^18.x.x",
+    "react-dom": "^18.x.x"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.x.x",
+    "@types/node": "^18.x.x",
+    "@types/react": "^18.x.x",
+    "autoprefixer": "^10.x.x",
+    "eslint": "^8.x.x",
+    "jest": "^29.x.x",
+    "postcss": "^8.x.x",
+    "tailwindcss": "^3.x.x",
+    "typescript": "^5.x.x"
+  }
+}
+```
+
+## Development Environment
+
+### Required Tools
+- **Node.js**: JavaScript runtime
+- **npm/yarn**: Package managers for JavaScript
+- **Git**: Version control system
+
+### Development Workflow
+1. Local development using `npm run dev`
+2. Type checking with TypeScript
+3. Linting with ESLint
+4. Testing with Jest
+5. Building for production with `npm run build`
+
+## File Structure
+
+```
+bill-generator/
+├── app/                    # Next.js app directory
+│   ├── globals.css         # Global styles
+│   ├── layout.tsx          # Root layout component
+│   └── page.tsx            # Main page component
+├── components/             # React components
+│   ├── DocumentList.tsx    # Component for managing selected documents
+│   ├── Table.tsx           # Table container component
+│   └── TableRow.tsx        # Component for individual branch rows
+├── config/                 # Configuration files
+│   ├── branchConfig.ts     # Branch-specific configurations
+│   └── companyConfig.ts    # Company-specific configurations
+├── contexts/               # React contexts
+│   └── DocumentContext.tsx # Context for managing selected documents
+├── css/                    # Component-specific CSS
+│   ├── DocumentList.css    # Styles for DocumentList component
+│   ├── Table.css           # Styles for Table component
+│   └── TableRow.css        # Styles for TableRow component
+├── interfaces/             # TypeScript interfaces
+│   ├── IBankBranch.ts      # Interface for branch data
+│   ├── IBranchConfig.ts    # Interface for branch configuration
+│   ├── ICompanyConfig.ts   # Interface for company configuration
+│   └── IFormValues.ts      # Interface for form values
+├── public/                 # Static assets
+│   └── res/                # Document templates
+│       ├── Hours_Template.docx
+│       ├── Minutes_Template.docx
+│       └── StartEnd_Template.docx
+├── utils/                  # Utility functions
+│   ├── calculateTotal.ts   # Calculate bill total
+│   ├── convertDate.ts      # Date conversion utilities
+│   ├── convertToWords.ts   # Convert numbers to words
+│   ├── docxToPdf.ts        # Convert DOCX to PDF
+│   ├── downloadDocx.ts     # Download DOCX files
+│   ├── formatCpm.ts        # Format consumption per minute with 3 decimal places
+│   ├── formatHours.ts      # Format hours display
+│   ├── generateDocument.ts # Generate document from template
+│   ├── getBranchDetails.ts # Get branch configuration
+│   ├── getCompanyDetails.ts# Get company configuration
+│   ├── getPreviousMonth.ts # Get previous month name
+│   ├── mergeDocx.ts        # Merge multiple DOCX files
+│   ├── pdfUtils.ts         # PDF utility functions
+│   └── roundOffTotal.ts    # Round off total amount
+├── __tests__/              # Test files
+│   ├── calculateTotalTest.ts
+│   └── convertToWordsTest.ts
+├── branches.json           # Branch data
+├── jest.config.ts          # Jest configuration
+├── jest.setup.ts           # Jest setup
+├── next.config.mjs         # Next.js configuration
+├── package.json            # Project dependencies
+├── postcss.config.mjs      # PostCSS configuration
+├── tailwind.config.ts      # Tailwind CSS configuration
+└── tsconfig.json           # TypeScript configuration
+```
+
+## Technical Constraints
+
+### Browser Compatibility
+- Modern browsers (Chrome, Firefox, Safari, Edge)
+- No support required for Internet Explorer
+
+### Performance Considerations
+- Document generation happens client-side
+- Template loading may require optimization for larger templates
+- Batch processing limited by browser memory constraints
+
+### Security Considerations
+- All processing happens client-side
+- No server-side storage of generated documents
+- No sensitive data transmission
+
+## Data Flow Architecture
+
+### Configuration Data Flow
+1. Branch data loaded from `branches.json`
+2. Detailed branch configurations from `branchConfig.ts`
+3. Company details from `companyConfig.ts`
+
+### Document Generation Flow
+1. User inputs captured in component state
+2. Data validated using field-specific validation rules
+3. Total calculated based on branch-specific consumption rates
+4. Document template selected based on branch template type
+5. Template loaded and populated with data
+6. Generated document saved or added to batch queue
+
+## Build and Deployment
+
+### Build Process
+```
+npm run build
+```
+- TypeScript compilation
+- Next.js optimization
+- Static asset copying
+
+### Deployment Options
+- Static export for simple hosting
+- Vercel deployment for serverless functions
+- Docker containerization for custom hosting
+
+## Technical Debt and Considerations
+
+1. **Type Safety**: Some areas use `@ts-expect-error` which could be improved
+2. **Error Handling**: Error handling could be enhanced in document generation
+3. **Testing Coverage**: Increase test coverage for critical utility functions
+4. **Responsive Design**: Ensure full mobile compatibility
+5. **Accessibility**: Improve accessibility compliance

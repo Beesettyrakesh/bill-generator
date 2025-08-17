@@ -1,15 +1,19 @@
+//cpm: consumption per minute
+
 export const branchConfig= {
   "Seethammadhara": {
     "company": "GODAVARI POWER SYSTEMS",
-    "template": "HOURS",
+    "template": "MINUTES",
     "genCapacity": "62.5 KVA",
     "consumption": 10.92,
+    "cpm": 0.182,
   },
   "Chinamushidiwada" : {
     "company": "GODAVARI POWER SYSTEMS",
-    "template": "HOURS",
+    "template": "MINUTES",
     "genCapacity": "50 KVA",
     "consumption": 10.19,
+    "cpm": 0.170,
   },
   "Kakani Nagar": {
     "company": "GODAVARI POWER SYSTEMS",
@@ -31,9 +35,10 @@ export const branchConfig= {
   },
   "Yellamanchalli": {
     "company": "GODAVARI POWER SYSTEMS",
-    "template": "HOURS",
+    "template": "MINUTES",
     "genCapacity": "40 KVA",
     "consumption": 8.11,
+    "cpm": 0.135,
   },
   "Industrial Estate": {
     "company": "SRI SAI SABITHA ELECTRICALS",
@@ -49,8 +54,9 @@ export const branchConfig= {
   },
   "Nakkapalli": {
     "company": "SRI SAI SABITHA ELECTRICALS",
-    "template": "HOURS",
+    "template": "MINUTES",
     "genCapacity": "20 KVA",
     "consumption": 4.78,
+    "cpm": 0.079
   }
 }

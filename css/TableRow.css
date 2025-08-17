@@ -1,3 +1,126 @@
+/* Row Styles */
+.bank-row {
+  transition: all 0.2s ease;
+}
+
 .bank-row:hover {
-    background-color: lightgray;
+  background-color: #f0f7ff !important;
+}
+
+/* Cell Styles - Added consistent padding */
+.bank-row td {
+  padding: 12px 10px; /* Uniform padding */
+  vertical-align: middle;
+}
+
+/* Input Container */
+.input-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Input Field Spacing */
+.table-input {
+  width: 100%;
+  padding: 8px 12px;
+  margin: 4px 0; /* Adds vertical spacing between inputs */
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.2s;
+  box-sizing: border-box; /* Ensures padding doesn't affect width */
+}
+
+/* Error state for input fields */
+.table-input.input-error {
+  border-color: #f44336;
+  background-color: #fff8f8;
+}
+
+/* Error message styling */
+.error-message {
+  color: #f44336;
+  font-size: 0.75rem;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* Focus State */
+.table-input:focus {
+  outline: none;
+  border-color: #4b6cb7;
+  box-shadow: 0 0 0 2px rgba(75, 108, 183, 0.2);
+}
+
+/* Action Buttons */
+.action-button {
+  padding: 8px 12px;
+  margin: 4px 0; /* Consistent with input spacing */
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+/* Generate Button */
+.generate-button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.generate-button:hover {
+  background-color: #45a049;
+}
+
+.generate-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Add Button */
+.add-button {
+  background-color: #2196F3;
+  color: white;
+}
+
+.add-button:hover {
+  background-color: #0b7dda;
+}
+
+.add-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Reset Button */
+.reset-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.reset-button:hover {
+  background-color: #d32f2f;
+}
+
+.reset-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .bank-row td {
+    padding: 10px 6px;
+  }
+
+  .table-input {
+    padding: 6px 8px;
+  }
+
+  .action-button {
+    padding: 6px 8px;
+  }
 }

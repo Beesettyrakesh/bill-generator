@@ -29,21 +29,42 @@ numbersMap.set(80, 'Eighty')
 numbersMap.set(90, 'Ninety')
 numbersMap.set(100, 'Hundred')
 
-const convertToWords = (finalTotal: string): string => {
+const convertToWords = (finalTotal: string, template?: string): string => {
 
     const total: number = Number(finalTotal)
-    const hundreds: number = Math.floor(total % 1000 / 100)
-    const thousands: number = (parseInt((total / 1000).toString()))
-    const unitsAndTens: number = Number(total % 100)
 
-    const hundredsString = stringify(hundreds, "Hundred")
-    const thousandsString = stringify(thousands, "Thousand")
-    const unitsAndTensString = stringify(unitsAndTens, "").replaceAll(" ", "-")
+    if(template === "MINUTES") {
+        const rupees = Math.floor(total)
+        const paisa = Math.round((total - rupees) * 100)
+        
+        // Convert rupees part
+        const rupeesInWords = convertNumberToWords(rupees)
+        
+        // If there are paisa, add them
+        if (paisa > 0) {
+            const paisaInWords = stringify(paisa, "").replaceAll(" ", "-")
+            return `${rupeesInWords} Rupees and ${paisaInWords} Paisa Only`
+        } else {
+            return `${rupeesInWords} Rupees Only`
+        }
+    }
 
-    if ((thousands || hundreds) && unitsAndTens) {
-        return (thousandsString+" "+hundredsString+" and "+unitsAndTensString+" Rupees Only").trim().replaceAll("  ", " ")
-    } else {
-        return (thousandsString+" "+hundredsString+" "+unitsAndTensString+" Rupees Only").trim().replaceAll("  ", " ")
+    return convertNumberToWords(total) + " Rupees Only"
+
+    function convertNumberToWords(num: number): string {
+        const hundreds: number = Math.floor(num % 1000 / 100)
+        const thousands: number = (parseInt((num / 1000).toString()))
+        const unitsAndTens: number = Number(num % 100)
+
+        const hundredsString = stringify(hundreds, "Hundred")
+        const thousandsString = stringify(thousands, "Thousand")
+        const unitsAndTensString = stringify(unitsAndTens, "").replaceAll(" ", "-")
+
+        if ((thousands || hundreds) && unitsAndTens) {
+            return (thousandsString+" "+hundredsString+" and "+unitsAndTensString).trim().replaceAll("  ", " ")
+        } else {
+            return (thousandsString+" "+hundredsString+" "+unitsAndTensString).trim().replaceAll("  ", " ")
+        }
     }
 }
 

@@ -10,6 +10,8 @@ import getPreviousMonth from "@/utils/getPreviousMonth";
 import convertDate from "@/utils/convertDate";
 import roundOffTotal from "@/utils/roundOffTotal";
 import convertToWords from "@/utils/convertToWords";
+import formatHours from "@/utils/formatHours";
+import formatCpm from "@/utils/formatCpm";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
@@ -29,8 +31,113 @@ function loadFile(url, callback) {
     PizZipUtils.getBinaryContent(url, callback);
 }
 
-const generateDocument = (input: IFormValues) => {
+// Function that returns a blob instead of downloading
+export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+        const branchDetails: IBranchConfig = getBranchDetails(input.branch)
+        const companyDetails: ICompanyConfig = getCompanyDetails(branchDetails["company"])
 
+        let url;
+        const date = new Date()
+        const currYear = date.getFullYear();
+        const prevMonth = getPreviousMonth()
+        const submitDate = convertDate(input.date)
+        const template = branchDetails["template"]
+        const endDate = new Date(date.setDate(0)).toLocaleDateString().replaceAll("/", "-")
+        const startDate = new Date(date.setDate(1)).toLocaleDateString().replaceAll("/", "-")
+        
+        // Handle MINUTES template differently
+        let finalTotal, totalInWords;
+        if (template === "MINUTES") {
+            // For MINUTES template, don't round off
+            finalTotal = input.total;
+            // Include paisa in words
+            totalInWords = convertToWords(finalTotal, "MINUTES");
+        } else {
+            // For other templates, use existing logic
+            finalTotal = roundOffTotal(Number(input.total));
+            totalInWords = convertToWords(finalTotal);
+        }
+        
+        // Format hours to display in HH.MM format
+        const formattedHours = formatHours(input.hours)
+
+        if (template == "START_AND_END")
+            url = 'res/StartEnd_Template.docx'
+        else if (template == "MINUTES")
+            url = 'res/Minutes_Template.docx'
+        else
+            url = 'res/Hours_Template.docx'
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        loadFile(url, function (error, content) {
+            if (error) {
+                reject(error);
+                return;
+            }
+            
+            try {
+                const zip = new PizZip(content);
+                const doc = new Docxtemplater(zip, {
+                    linebreaks: true,
+                    paragraphLoop: true,
+                });
+
+                // render the document (replace all occurences of {first_name} by John, {last_name} by Doe, ...)
+                doc.render({
+                    contact: companyDetails["contact"],
+                    company: branchDetails["company"],
+                    address: companyDetails["address"],
+                    date: submitDate,
+                    toBranch: input.branch,
+                    branch: input.branch.toLocaleUpperCase(),
+                    genCapacity: branchDetails["genCapacity"],
+                    month: prevMonth,
+                    year: currYear,
+                    monthEnd: endDate,
+                    monthStart: startDate,
+                    
+                    // Conditional fields based on template
+                    ...(template === "MINUTES" ? {
+                        // MINUTES template specific fields
+                        minutes: input.hours, // For MINUTES, the hours input is actually minutes
+                        consumption: branchDetails["consumption"], // Include consumption for reference
+                        cpm: formatCpm(branchDetails["cpm"]), // Format cpm to 3 decimal places
+                    } : {
+                        // Other templates
+                        start: input.startReading,
+                        end: input.endReading,
+                        hours: formattedHours,
+                        consumption: branchDetails["consumption"],
+                    }),
+                    
+                    // Common fields
+                    fuelPrice: input.fuelPrice,
+                    total: input.total,
+                    roundOff: finalTotal,
+                    totalInWords: totalInWords,
+                    totalInWordsWithPaisa: totalInWords,
+                    account: companyDetails["account"]
+                });
+
+                const blob = doc.getZip().generate({
+                    type: 'blob',
+                    mimeType:
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                });
+
+                // Resolve with the blob instead of saving
+                resolve(blob);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    });
+};
+
+// Original function for direct downloads
+const generateDocument = (input: IFormValues) => {
     const branchDetails: IBranchConfig = getBranchDetails(input.branch)
     const companyDetails: ICompanyConfig = getCompanyDetails(branchDetails["company"])
 
@@ -39,14 +146,30 @@ const generateDocument = (input: IFormValues) => {
     const currYear = date.getFullYear();
     const prevMonth = getPreviousMonth()
     const submitDate = convertDate(input.date)
-    const finalTotal = roundOffTotal(Number(input.total))
+    const template = branchDetails["template"]
     const endDate = new Date(date.setDate(0)).toLocaleDateString().replaceAll("/", "-")
     const startDate = new Date(date.setDate(1)).toLocaleDateString().replaceAll("/", "-")
-    const totalInWords = convertToWords(finalTotal)
-    const template = branchDetails["template"]
+    
+    // Handle MINUTES template differently
+    let finalTotal, totalInWords;
+    if (template === "MINUTES") {
+        // For MINUTES template, don't round off
+        finalTotal = input.total;
+        // Include paisa in words
+        totalInWords = convertToWords(finalTotal, "MINUTES");
+    } else {
+        // For other templates, use existing logic
+        finalTotal = roundOffTotal(Number(input.total));
+        totalInWords = convertToWords(finalTotal);
+    }
+    
+    // Format hours to display in HH.MM format
+    const formattedHours = formatHours(input.hours)
 
     if (template == "START_AND_END")
         url = 'res/StartEnd_Template.docx'
+    else if (template == "MINUTES")
+        url = 'res/Minutes_Template.docx'
     else
         url = 'res/Hours_Template.docx'
 
@@ -75,10 +198,22 @@ const generateDocument = (input: IFormValues) => {
             year: currYear,
             monthEnd: endDate,
             monthStart: startDate,
-            start: input.startReading,
-            end: input.endReading,
-            hours: input.hours,
-            consumption: branchDetails["consumption"],
+            
+            // Conditional fields based on template
+            ...(template === "MINUTES" ? {
+                // MINUTES template specific fields
+                minutes: input.hours, // For MINUTES, the hours input is actually minutes
+                consumption: branchDetails["consumption"], // Include consumption for reference
+                cpm: formatCpm(branchDetails["cpm"]), // Format cpm to 3 decimal places
+            } : {
+                // Other templates
+                start: input.startReading,
+                end: input.endReading,
+                hours: formattedHours,
+                consumption: branchDetails["consumption"],
+            }),
+            
+            // Common fields
             fuelPrice: input.fuelPrice,
             total: input.total,
             roundOff: finalTotal,
