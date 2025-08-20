@@ -1,4 +1,5 @@
 import { DocumentProvider } from '@/contexts/DocumentContext';
+import { FuelPriceProvider } from '@/contexts/FuelPriceContext';
 import './globals.css';
 
 export const metadata = {
@@ -16,12 +17,14 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <DocumentProvider>
-          <main className="app-main">
-            {children}
-          </main>
-          <footer className="app-footer">
-            <p>&copy; {new Date().getFullYear()} Bill Generator</p>
-          </footer>
+          <FuelPriceProvider>
+            <main className="app-main">
+              {children}
+            </main>
+            <footer className="app-footer">
+              <p>&copy; {new Date().getFullYear()} Bill Generator</p>
+            </footer>
+          </FuelPriceProvider>
         </DocumentProvider>
       </body>
     </html>

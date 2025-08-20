@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import generateDocument, { generateDocumentAsBlob } from "@/utils/generateDocument";
 import calculateTotal from "@/utils/calculateTotal";
 import { useDocuments } from "@/contexts/DocumentContext";
+import { useFuelPrices } from "@/contexts/FuelPriceContext";
 
 // Validation types
 interface ValidationErrors {
@@ -21,6 +22,7 @@ interface TableRowProps {
 
 const TableRow = (props: TableRowProps) => {
   const { addDocument } = useDocuments();
+  const { fuelPrices, updateFuelPrice, verifyPersistence } = useFuelPrices();
   const [branch] = useState(props.branch.name);
   const [date, setDate] = useState("");
   const [startReading, setStartReading] = useState("");
@@ -29,6 +31,22 @@ const TableRow = (props: TableRowProps) => {
   const [fuelPrice, setFuelPrice] = useState("");
   const [total, setTotal] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
+  
+  // Load cached fuel price when component mounts
+  useEffect(() => {
+    console.log(`TableRow(${branch}): Loading cached fuel price`);
+    const cachedPrice = fuelPrices[branch];
+    if (cachedPrice) {
+      console.log(`TableRow(${branch}): Found cached price: ${cachedPrice}`);
+      setFuelPrice(cachedPrice);
+    } else {
+      console.log(`TableRow(${branch}): No cached price found`);
+    }
+    
+    // Check if persistence is working
+    const isPersistenceWorking = verifyPersistence();
+    console.log(`TableRow(${branch}): Persistence verification: ${isPersistenceWorking ? 'OK' : 'FAILED'}`);
+  }, [branch, fuelPrices, verifyPersistence]);
 
   const reset = () => {
     setDate("");
@@ -77,6 +95,19 @@ const TableRow = (props: TableRowProps) => {
     }
   };
   
+  // Auto-calculate hours for START_AND_END template branches
+  useEffect(() => {
+    if (props.branch.template === 'START_AND_END' && startReading && endReading) {
+      const start = Number(startReading);
+      const end = Number(endReading);
+      
+      if (!isNaN(start) && !isNaN(end) && end > start) {
+        const calculatedHours = (end - start).toString();
+        setHours(calculatedHours);
+      }
+    }
+  }, [startReading, endReading, props.branch.template]);
+
   useEffect(() => {
     if (hours && fuelPrice && branch) {
       const billTotal: number = calculateTotal(
@@ -219,7 +250,13 @@ const TableRow = (props: TableRowProps) => {
             placeholder="Fuel price"
             value={fuelPrice}
             onChange={(event) => {
-              setFuelPrice(event.target.value);
+              const newPrice = event.target.value;
+              setFuelPrice(newPrice);
+              
+              // Update the global fuel price if it's valid
+              if (newPrice && !isNaN(Number(newPrice)) && Number(newPrice) > 0) {
+                updateFuelPrice(branch, newPrice);
+              }
             }}
             className="table-input"
           />
