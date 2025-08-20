@@ -2,7 +2,8 @@
 import { useDocuments } from '@/contexts/DocumentContext';
 import '../css/DocumentList.css';
 import { useState } from 'react';
-import { downloadDocxFiles } from '@/utils/downloadDocx';
+import { downloadPdfFiles } from '@/utils/cloudConvertService';
+import { generateDocumentAsBlob } from '@/utils/generateDocument';
 
 const DocumentList = () => {
   const { selectedDocuments, removeDocument, clearDocuments } = useDocuments();
@@ -17,8 +18,8 @@ const DocumentList = () => {
       setIsProcessing(true);
       console.log('Downloading documents:', selectedDocuments);
       
-      // Download DOCX files individually
-      await downloadDocxFiles(selectedDocuments);
+      // Download PDF files individually
+      await downloadPdfFiles(selectedDocuments, generateDocumentAsBlob);
       
       setIsProcessing(false);
     } catch (error) {
@@ -62,7 +63,7 @@ const DocumentList = () => {
           onClick={handleDownload}
           disabled={isProcessing}
         >
-          {isProcessing ? 'Processing...' : 'Download Documents'}
+          {isProcessing ? 'Processing...' : 'Download PDF Documents'}
         </button>
         <button 
           className="clear-button"

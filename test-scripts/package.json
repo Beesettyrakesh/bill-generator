@@ -1,0 +1,14 @@
+{
+  "name": "pdf-conversion-test",
+  "version": "1.0.0",
+  "description": "Test script for PDF conversion API",
+  "type": "module",
+  "main": "test-pdf-conversion.js",
+  "scripts": {
+    "test": "node test-pdf-conversion.js"
+  },
+  "dependencies": {
+    "form-data": "^4.0.0",
+    "node-fetch": "^3.3.2"
+  }
+}

@@ -19,12 +19,19 @@ The current focus is on:
 
 ## Recent Changes
 
-1. **Input Validation**: Added comprehensive validation for all input fields
-2. **Batch Processing**: Implemented the ability to queue and download multiple bills
-3. **Hours Formatting**: Added formatting for hours display in generated documents
-4. **Error Handling**: Enhanced error handling in document generation process
-5. **UI Improvements**: Added visual feedback for validation errors
-6. **MINUTES Template Enhancements**:
+1. **PDF Conversion Implementation**:
+   - Added PDF generation functionality using CloudConvert API
+   - Fixed formidable import issue in API route (`import { formidable } from 'formidable'`)
+   - Optimized credit usage by switching from 'office' engine (2 credits) to 'libreoffice' engine (1 credit)
+   - Implemented proper error handling with fallback to DOCX when PDF conversion fails
+   - Created test HTML page for direct testing of the PDF conversion API
+
+2. **Input Validation**: Added comprehensive validation for all input fields
+3. **Batch Processing**: Implemented the ability to queue and download multiple bills
+4. **Hours Formatting**: Added formatting for hours display in generated documents
+5. **Error Handling**: Enhanced error handling in document generation process
+6. **UI Improvements**: Added visual feedback for validation errors
+7. **MINUTES Template Enhancements**:
    - Fixed consumption value display in MINUTES template documents
    - Added formatCpm utility to ensure cpm values always display with 3 decimal places
    - Standardized document generation between direct download and batch processing
@@ -42,9 +49,10 @@ The current focus is on:
    - Ensure the application works well on mobile devices
    - Optimize table layout for smaller screens
 
-3. **Add PDF Support**:
-   - Implement direct PDF generation option
-   - Add preview functionality for generated documents
+3. **Enhance PDF Support**:
+   - Add preview functionality for generated PDF documents
+   - Implement caching for frequently generated documents
+   - Explore batch PDF merging to further optimize credit usage
 
 ### Medium-term Goals
 

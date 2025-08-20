@@ -15,9 +15,15 @@
 - **Docxtemplater**: Library for generating DOCX documents from templates
 - **PizZip**: Library for working with ZIP files (used by Docxtemplater)
 - **File-saver**: Library for saving files on the client-side
+- **CloudConvert API**: Third-party service for converting DOCX to PDF
+- **Formidable**: Node.js module for parsing form data, used in API routes
 
 ### State Management
 - **React Context API**: Built-in React state management for sharing state between components
+
+### Server-side Processing
+- **Next.js API Routes**: Serverless functions for handling API requests
+- **CloudConvert SDK**: Official SDK for interacting with CloudConvert API
 
 ### Testing
 - **Jest**: JavaScript testing framework
@@ -28,8 +34,10 @@
 ```json
 {
   "dependencies": {
+    "cloudconvert": "^3.0.0",
     "docxtemplater": "^3.x.x",
     "file-saver": "^2.x.x",
+    "formidable": "^3.5.4",
     "next": "^13.x.x",
     "pizzip": "^3.x.x",
     "react": "^18.x.x",
@@ -89,6 +97,9 @@ bill-generator/
 │   ├── IBranchConfig.ts    # Interface for branch configuration
 │   ├── ICompanyConfig.ts   # Interface for company configuration
 │   └── IFormValues.ts      # Interface for form values
+├── pages/                  # Next.js pages directory
+│   └── api/                # API routes
+│       └── convert-to-pdf.js # PDF conversion API route
 ├── public/                 # Static assets
 │   └── res/                # Document templates
 │       ├── Hours_Template.docx
@@ -98,7 +109,7 @@ bill-generator/
 │   ├── calculateTotal.ts   # Calculate bill total
 │   ├── convertDate.ts      # Date conversion utilities
 │   ├── convertToWords.ts   # Convert numbers to words
-│   ├── docxToPdf.ts        # Convert DOCX to PDF
+│   ├── cloudConvertService.js # Service for PDF conversion using CloudConvert API
 │   ├── downloadDocx.ts     # Download DOCX files
 │   ├── formatCpm.ts        # Format consumption per minute with 3 decimal places
 │   ├── formatHours.ts      # Format hours display
@@ -132,11 +143,17 @@ bill-generator/
 - Document generation happens client-side
 - Template loading may require optimization for larger templates
 - Batch processing limited by browser memory constraints
+- PDF conversion happens server-side via CloudConvert API
+- CloudConvert API has usage limits (10 free credits per day)
+- LibreOffice engine uses 1 credit per conversion (optimized from Office engine's 2 credits)
 
 ### Security Considerations
-- All processing happens client-side
-- No server-side storage of generated documents
-- No sensitive data transmission
+- Document generation happens client-side
+- PDF conversion happens server-side via CloudConvert API
+- API key stored securely in environment variables
+- No persistent server-side storage of generated documents
+- Temporary file storage during conversion process
+- No sensitive data transmission beyond document content
 
 ## Data Flow Architecture
 
@@ -151,7 +168,13 @@ bill-generator/
 3. Total calculated based on branch-specific consumption rates
 4. Document template selected based on branch template type
 5. Template loaded and populated with data
-6. Generated document saved or added to batch queue
+6. DOCX document generated client-side
+7. For PDF output:
+   a. DOCX sent to server-side API route
+   b. API route sends DOCX to CloudConvert for conversion
+   c. Converted PDF returned to client
+   d. Fallback to DOCX if conversion fails
+8. Generated document saved or added to batch queue
 
 ## Build and Deployment
 
@@ -164,9 +187,10 @@ npm run build
 - Static asset copying
 
 ### Deployment Options
-- Static export for simple hosting
-- Vercel deployment for serverless functions
+- Vercel deployment for serverless functions (recommended for API routes)
+- Other serverless platforms supporting Next.js API routes
 - Docker containerization for custom hosting
+- Environment variables required for CloudConvert API key
 
 ## Technical Debt and Considerations
 
@@ -175,3 +199,8 @@ npm run build
 3. **Testing Coverage**: Increase test coverage for critical utility functions
 4. **Responsive Design**: Ensure full mobile compatibility
 5. **Accessibility**: Improve accessibility compliance
+6. **PDF Conversion Optimization**: 
+   - Explore batch conversion to reduce API credit usage
+   - Implement caching for frequently generated documents
+   - Consider alternative conversion engines based on document complexity
+7. **API Error Handling**: Improve error handling for CloudConvert API failures

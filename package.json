@@ -10,9 +10,12 @@
     "test": "jest"
   },
   "dependencies": {
+    "cloudconvert": "^3.0.0",
     "docxtemplater": "^3.50.0",
     "file-saver": "^2.0.5",
+    "formidable": "^3.5.4",
     "next": "14.2.9",
+    "node-fetch": "^3.3.2",
     "pdf-lib": "^1.17.1",
     "pizzip": "^3.1.7",
     "react": "^18",
