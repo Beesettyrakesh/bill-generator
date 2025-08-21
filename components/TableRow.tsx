@@ -1,11 +1,15 @@
 "use client";
-import "../css/TableRow.css";
+
 import { IBankBranch } from "@/interfaces/IBankBranch";
 import { useEffect, useState } from "react";
 import generateDocument, { generateDocumentAsBlob } from "@/utils/generateDocument";
 import calculateTotal from "@/utils/calculateTotal";
 import { useDocuments } from "@/contexts/DocumentContext";
 import { useFuelPrices } from "@/contexts/FuelPriceContext";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // Validation types
 interface ValidationErrors {
@@ -20,7 +24,7 @@ interface TableRowProps {
   branch: IBankBranch;
 }
 
-const TableRow = (props: TableRowProps) => {
+const TableRowComponent = (props: TableRowProps) => {
   const { addDocument } = useDocuments();
   const { fuelPrices, updateFuelPrice, verifyPersistence } = useFuelPrices();
   const [branch] = useState(props.branch.name);
@@ -175,77 +179,106 @@ const TableRow = (props: TableRowProps) => {
     }
   };
 
+  const validateAndGenerateDocument = () => {
+    // Validate all fields before generating document
+    const newErrors: ValidationErrors = {};
+    newErrors.date = validateField('date', date);
+    if (props.branch.template === 'START_AND_END') {
+      newErrors.startReading = validateField('startReading', startReading);
+      newErrors.endReading = validateField('endReading', endReading);
+    }
+    newErrors.hours = validateField('hours', hours);
+    newErrors.fuelPrice = validateField('fuelPrice', fuelPrice);
+    
+    // Filter out undefined errors
+    const filteredErrors = Object.fromEntries(
+      Object.entries(newErrors).filter(([, value]) => value !== undefined)
+    );
+    
+    setErrors(filteredErrors);
+    
+    // If there are errors, don't proceed
+    if (Object.keys(filteredErrors).length > 0) {
+      return;
+    }
+    
+    // If validation passes, generate the document
+    generateDocument({
+      branch,
+      date,
+      startReading,
+      endReading,
+      hours,
+      fuelPrice,
+      total,
+    });
+  };
+
   return (
-    <tr className="bank-row">
-      <td className="branch-name">{props.branch.name}</td>
-      <td>
-        <div className="input-container">
-          <input
+    <TableRow>
+      <TableCell className="font-medium text-base">{props.branch.name}</TableCell>
+      <TableCell>
+        <div className="relative">
+          <Input
             type="date"
             value={date}
-            onChange={(event) => {
-              setDate(event.target.value);
-            }}
-            className="table-input"
+            onChange={(event) => setDate(event.target.value)}
+            className={cn("text-base", errors.date && "border-destructive")}
           />
-          {errors.date && <div className="error-message">{errors.date}</div>}
+          {errors.date && <div className="text-xs text-destructive mt-1">{errors.date}</div>}
         </div>
-      </td>
-      {props.branch.template === "START_AND_END" && (
+      </TableCell>
+      
+      {props.branch.template === "START_AND_END" ? (
         <>
-          <td>
-            <div className="input-container">
-              <input
+          <TableCell>
+            <div className="relative">
+              <Input
                 type="text"
                 placeholder="Start reading"
                 value={startReading}
-                onChange={(event) => {
-                  setStartReading(event.target.value);
-                }}
-                className="table-input"
+                onChange={(event) => setStartReading(event.target.value)}
+                className={cn("text-base", errors.startReading && "border-destructive")}
               />
-              {errors.startReading && <div className="error-message">{errors.startReading}</div>}
+              {errors.startReading && <div className="text-xs text-destructive mt-1">{errors.startReading}</div>}
             </div>
-          </td>
-          <td>
-            <div className="input-container">
-              <input
+          </TableCell>
+          <TableCell>
+            <div className="relative">
+              <Input
                 type="text"
                 placeholder="End reading"
                 value={endReading}
-                onChange={(event) => {
-                  setEndReading(event.target.value);
-                }}
-                className="table-input"
+                onChange={(event) => setEndReading(event.target.value)}
+                className={cn("text-base", errors.endReading && "border-destructive")}
               />
-              {errors.endReading && <div className="error-message">{errors.endReading}</div>}
+              {errors.endReading && <div className="text-xs text-destructive mt-1">{errors.endReading}</div>}
             </div>
-          </td>
+          </TableCell>
         </>
-      )}
-      {props.branch.template !== "START_AND_END" && (
+      ) : (
         <>
-          <td></td>
-          <td></td>
+          <TableCell></TableCell>
+          <TableCell></TableCell>
         </>
       )}
-      <td>
-        <div className="input-container">
-          <input
+      
+      <TableCell>
+        <div className="relative">
+          <Input
             type="text"
             placeholder={props.branch.template === "MINUTES" ? "Minutes" : "Hours"}
             value={hours}
-            onChange={(event) => {
-              setHours(event.target.value);
-            }}
-            className="table-input"
+            onChange={(event) => setHours(event.target.value)}
+            className={cn("text-base", errors.hours && "border-destructive")}
           />
-          {errors.hours && <div className="error-message">{errors.hours}</div>}
+          {errors.hours && <div className="text-xs text-destructive mt-1">{errors.hours}</div>}
         </div>
-      </td>
-      <td>
-        <div className="input-container">
-          <input
+      </TableCell>
+      
+      <TableCell>
+        <div className="relative">
+          <Input
             type="text"
             placeholder="Fuel price"
             value={fuelPrice}
@@ -258,76 +291,51 @@ const TableRow = (props: TableRowProps) => {
                 updateFuelPrice(branch, newPrice);
               }
             }}
-            className="table-input"
+            className={cn("text-base", errors.fuelPrice && "border-destructive")}
           />
-          {errors.fuelPrice && <div className="error-message">{errors.fuelPrice}</div>}
+          {errors.fuelPrice && <div className="text-xs text-destructive mt-1">{errors.fuelPrice}</div>}
         </div>
-      </td>
-      <td className="total-amount">{total ? `₹${total}` : "-"}</td>
-      <td>
-        <button
-          className="action-button generate-button"
-          onClick={() => {
-            // Validate all fields before generating document
-            const newErrors: ValidationErrors = {};
-            newErrors.date = validateField('date', date);
-            if (props.branch.template === 'START_AND_END') {
-              newErrors.startReading = validateField('startReading', startReading);
-              newErrors.endReading = validateField('endReading', endReading);
-            }
-            newErrors.hours = validateField('hours', hours);
-            newErrors.fuelPrice = validateField('fuelPrice', fuelPrice);
-            
-            // Filter out undefined errors
-            const filteredErrors = Object.fromEntries(
-              Object.entries(newErrors).filter(([, value]) => value !== undefined)
-            );
-            
-            setErrors(filteredErrors);
-            
-            // If there are errors, don't proceed
-            if (Object.keys(filteredErrors).length > 0) {
-              return;
-            }
-            
-            // If validation passes, generate the document
-            generateDocument({
-              branch,
-              date,
-              startReading,
-              endReading,
-              hours,
-              fuelPrice,
-              total,
-            });
-          }}
-          disabled={!total}
-        >
-          Generate Bill
-        </button>
-      </td>
-      <td>
-        <button
-          className="action-button add-button"
-          onClick={handleAddDocument}
-          disabled={!total}
-        >
-          Add
-        </button>
-      </td>
-      <td>
-        <button
-          className="action-button reset-button"
-          onClick={reset}
-          disabled={
-            !date && !startReading && !endReading && !hours && !fuelPrice
-          }
-        >
-          Reset
-        </button>
-      </td>
-    </tr>
+      </TableCell>
+      
+      <TableCell className="font-medium text-base">{total ? `₹${total}` : "-"}</TableCell>
+      
+      <TableCell>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={validateAndGenerateDocument}
+            disabled={!total}
+            className="text-base"
+          >
+            Generate
+          </Button>
+      </TableCell>
+      
+      <TableCell>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleAddDocument}
+            disabled={!total}
+            className="text-base"
+          >
+            Add
+          </Button>
+      </TableCell>
+      
+      <TableCell>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={reset}
+            disabled={!date && !startReading && !endReading && !hours && !fuelPrice}
+            className="text-base"
+          >
+            Reset
+          </Button>
+      </TableCell>
+    </TableRow>
   );
 };
 
-export default TableRow;
+export default TableRowComponent;

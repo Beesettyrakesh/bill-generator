@@ -3,7 +3,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useFuelPrices } from '@/contexts/FuelPriceContext';
 import branchData from '../branches.json';
-import '../css/FuelPriceManager.css';
+import { 
+  Card, 
+  CardContent, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { AlertTriangle, Check, X, MoveHorizontal } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const FuelPriceManager: React.FC = () => {
   const { fuelPrices, updateFuelPrice, verifyPersistence } = useFuelPrices();
@@ -86,147 +96,164 @@ const FuelPriceManager: React.FC = () => {
   // Toggle button
   if (!isExpanded) {
     return (
-      <button 
-        className={`manage-prices-button ${persistenceStatus === false ? 'persistence-error' : ''}`}
+      <Button 
+        variant={persistenceStatus === false ? "destructive" : "default"}
         onClick={() => setIsExpanded(true)}
-        title="Manage Fuel Prices"
+        className="flex items-center gap-2"
       >
-        <span className="button-icon">⛽</span>
-        <span className="button-text">Fuel Prices</span>
-        {persistenceStatus === false && <span className="persistence-warning" title="Storage persistence issue detected">⚠️</span>}
-      </button>
+        <span>⛽ Fuel Prices</span>
+        {persistenceStatus === false && <AlertTriangle className="h-4 w-4" />}
+      </Button>
     );
   }
 
   return (
-    <div 
-      className={`fuel-price-manager floating-panel ${position.x} ${position.y}`}
+    <Card 
+      className={cn(
+        "fixed z-50 w-[300px] shadow-lg",
+        position.x === 'right' ? 'right-4' : 'left-4',
+        position.y === 'top' ? 'top-4' : 'bottom-4'
+      )}
       ref={panelRef}
     >
-      <div className="fuel-price-manager-header">
-        <div className="header-title">
-          <span className="header-icon">⛽</span>
-          <h3>Fuel Prices</h3>
-          {persistenceStatus === false && 
-            <span className="persistence-warning-header" title="Storage persistence issue detected">⚠️</span>
-          }
+      <CardHeader className="bg-primary text-primary-foreground py-2 px-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <span>⛽</span>
+            <CardTitle className="text-base">Fuel Prices</CardTitle>
+            {persistenceStatus === false && 
+              <AlertTriangle className="h-4 w-4 text-destructive-foreground animate-pulse" />
+            }
+          </div>
+          <div className="flex gap-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6 text-primary-foreground hover:bg-primary/80"
+              onClick={() => setPosition({ 
+                x: position.x === 'right' ? 'left' : 'right', 
+                y: position.y 
+              })}
+            >
+              <MoveHorizontal className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6 text-primary-foreground hover:bg-primary/80"
+              onClick={() => setIsExpanded(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <div className="header-controls">
-          <button 
-            className="position-button" 
-            onClick={() => setPosition({ 
-              x: position.x === 'right' ? 'left' : 'right', 
-              y: position.y 
-            })}
-            title="Change horizontal position"
-          >
-            ↔️
-          </button>
-          <button 
-            className="close-button" 
-            onClick={() => setIsExpanded(false)}
-            title="Close panel"
-          >
-            ×
-          </button>
-        </div>
-      </div>
+      </CardHeader>
       
-      <div className="search-container">
-        <input
+      <CardContent className="p-3 space-y-3">
+        <Input
           type="text"
           placeholder="Search branches..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
+          className="text-sm"
         />
-      </div>
-      
-      <div className="quick-update-container">
-        <select 
-          value={selectedBranch} 
-          onChange={(e) => setSelectedBranch(e.target.value)}
-          className="branch-select"
-        >
-          {branchData.map(branch => (
-            <option key={branch.id} value={branch.name}>
-              {branch.name}
-            </option>
-          ))}
-        </select>
-        <div className="price-input-container">
-          <input
-            type="text"
-            placeholder="Price"
-            value={newPrice}
-            onChange={(e) => setNewPrice(e.target.value)}
-            className="price-input"
-          />
-          <button 
-            onClick={handleUpdatePrice}
-            className="update-button"
-            title="Update price"
+        
+        <div className="flex gap-2 items-center">
+          <select 
+            value={selectedBranch} 
+            onChange={(e) => setSelectedBranch(e.target.value)}
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
           >
-            ✓
-          </button>
-        </div>
-      </div>
-      
-      <div className="price-cards-container">
-        {filteredBranches.map(branch => (
-          <div key={branch.id} className="price-card">
-            {editingBranch === branch.name ? (
-              <div className="editing-card">
-                <span className="branch-name">{branch.name}</span>
-                <div className="edit-controls">
-                  <input
-                    type="text"
-                    value={editPrice}
-                    onChange={(e) => setEditPrice(e.target.value)}
-                    className="edit-price-input"
-                    autoFocus
-                  />
-                  <button 
-                    onClick={handleSaveQuickEdit}
-                    className="save-edit-button"
-                    title="Save"
-                  >
-                    ✓
-                  </button>
-                  <button 
-                    onClick={() => setEditingBranch(null)}
-                    className="cancel-edit-button"
-                    title="Cancel"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div 
-                className="view-card"
-                onClick={() => handleQuickEdit(branch.name)}
-              >
-                <span className="branch-name">{branch.name}</span>
-                <span className="price-value">
-                  {fuelPrices[branch.name] ? `₹${fuelPrices[branch.name]}` : 'Not set'}
-                </span>
-              </div>
-            )}
+            {branchData.map(branch => (
+              <option key={branch.id} value={branch.name}>
+                {branch.name}
+              </option>
+            ))}
+          </select>
+          <div className="flex gap-1">
+            <Input
+              type="text"
+              placeholder="Price"
+              value={newPrice}
+              onChange={(e) => setNewPrice(e.target.value)}
+              className="w-20 h-9 text-sm"
+            />
+            <Button 
+              variant="secondary"
+              size="icon"
+              onClick={handleUpdatePrice}
+              className="h-9 w-9"
+            >
+              <Check className="h-4 w-4" />
+            </Button>
           </div>
-        ))}
-      </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+          {filteredBranches.map(branch => (
+            <div 
+              key={branch.id} 
+              className={cn(
+                "rounded-md border p-2 text-xs cursor-pointer hover:bg-muted transition-colors",
+                editingBranch === branch.name && "border-primary"
+              )}
+              onClick={() => editingBranch !== branch.name && handleQuickEdit(branch.name)}
+            >
+              {editingBranch === branch.name ? (
+                <div className="space-y-1">
+                  <div className="font-medium truncate">{branch.name}</div>
+                  <div className="flex gap-1">
+                    <Input
+                      type="text"
+                      value={editPrice}
+                      onChange={(e) => setEditPrice(e.target.value)}
+                      className="h-7 text-xs"
+                      autoFocus
+                    />
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="default"
+                        size="icon"
+                        onClick={handleSaveQuickEdit}
+                        className="h-7 w-7"
+                      >
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setEditingBranch(null)}
+                        className="h-7 w-7"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="font-medium truncate">{branch.name}</div>
+                  <div className="text-primary font-medium mt-1">
+                    {fuelPrices[branch.name] ? `₹${fuelPrices[branch.name]}` : 'Not set'}
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </CardContent>
       
-      <div className="fuel-price-manager-footer">
-        <button 
+      <CardFooter className="p-3 pt-0">
+        <Button 
+          variant="outline"
+          size="sm"
           onClick={handleClearAll}
-          className="clear-all-button"
-          title="Clear all prices"
+          className="ml-auto text-xs"
         >
-          Clear All
-        </button>
-      </div>
-    </div>
+          Clear All Prices
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

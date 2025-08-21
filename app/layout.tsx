@@ -15,14 +15,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="pt-0 mt-0">
         <DocumentProvider>
           <FuelPriceProvider>
-            <main className="app-main">
+            <header className="app-header sticky top-0 z-50">
+              <div className="max-w-[98%] mx-auto flex justify-center items-center">
+                <h1 className="text-3xl font-bold font-heading">Bill Generator</h1>
+              </div>
+            </header>
+            <main className="app-main pt-4">
               {children}
             </main>
             <footer className="app-footer">
-              <p>&copy; {new Date().getFullYear()} Bill Generator</p>
+              <p className="font-serif">&copy; {new Date().getFullYear()} Bill Generator</p>
             </footer>
           </FuelPriceProvider>
         </DocumentProvider>

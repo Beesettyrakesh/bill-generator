@@ -1,9 +1,12 @@
 "use client";
+
 import { useDocuments } from '@/contexts/DocumentContext';
-import '../css/DocumentList.css';
 import { useState } from 'react';
 import { downloadPdfFiles } from '@/utils/cloudConvertService';
 import { generateDocumentAsBlob } from '@/utils/generateDocument';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 const DocumentList = () => {
   const { selectedDocuments, removeDocument, clearDocuments } = useDocuments();
@@ -41,39 +44,48 @@ const DocumentList = () => {
   }
   
   return (
-    <div className="document-list-container">
-      <h3 className="document-list-title">Selected Documents</h3>
-      <div className="document-list">
-        {selectedDocuments.map((doc) => (
-          <div key={doc.branch} className="document-item">
-            <span>{doc.branch}</span>
-            <button 
-              className="remove-button"
-              onClick={() => removeDocument(doc.branch)}
-              aria-label={`Remove ${doc.branch}`}
+    <Card className="mt-8 shadow-md">
+      <CardHeader className="bg-muted/50 pb-2">
+        <CardTitle className="text-xl font-heading">Selected Documents</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+          {selectedDocuments.map((doc) => (
+            <div 
+              key={doc.branch} 
+              className="flex items-center justify-between p-2 bg-muted rounded-md border border-border"
             >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
-      <div className="document-list-actions">
-        <button 
-          className="merge-button"
+              <span className="font-medium font-serif">{doc.branch}</span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 rounded-full" 
+                onClick={() => removeDocument(doc.branch)}
+                aria-label={`Remove ${doc.branch}`}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button 
+          variant="default"
           onClick={handleDownload}
           disabled={isProcessing}
         >
           {isProcessing ? 'Processing...' : 'Download PDF Documents'}
-        </button>
-        <button 
-          className="clear-button"
+        </Button>
+        <Button 
+          variant="outline"
           onClick={handleClearAll}
           disabled={isProcessing}
         >
           Clear All
-        </button>
-      </div>
-    </div>
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

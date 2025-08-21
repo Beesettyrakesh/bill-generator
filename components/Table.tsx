@@ -1,33 +1,43 @@
-import TableRow from "@/components/TableRow";
-import "../css/Table.css";
+import TableRowComponent from "@/components/TableRow";
 import branchData from "../branches.json";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-const Table = () => {
+const TableComponent = () => {
   return (
-    <div className="table-container">
-      <table className="banks-table">
-        <thead>
-          <tr className="bank-table-header">
-            <th>Branch</th>
-            <th>Date</th>
-            <th>Start reading</th>
-            <th>End reading</th>
-            <th>Total Hours</th>
-            <th>Fuel Price</th>
-            <th>Total</th>
-            <th></th>
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {branchData.map((branch) => (
-            <TableRow key={branch.id} branch={branch} />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Card className="w-full shadow-md">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-primary hover:bg-primary">
+              <TableHead className={cn("text-primary-foreground font-heading text-base")}>Branch</TableHead>
+              <TableHead className={cn("text-primary-foreground font-heading text-base")}>Date</TableHead>
+              <TableHead className={cn("text-primary-foreground font-heading text-base")}>Start reading</TableHead>
+              <TableHead className={cn("text-primary-foreground font-heading text-base")}>End reading</TableHead>
+              <TableHead className={cn("text-primary-foreground font-heading text-base")}>Total Hours</TableHead>
+              <TableHead className={cn("text-primary-foreground font-heading text-base")}>Fuel Price</TableHead>
+              <TableHead className={cn("text-primary-foreground font-heading text-base")}>Total</TableHead>
+              <TableHead className={cn("text-primary-foreground font-heading text-base")}></TableHead>
+              <TableHead className={cn("text-primary-foreground font-heading text-base")}></TableHead>
+              <TableHead className={cn("text-primary-foreground font-heading text-base")}></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {branchData.map((branch) => (
+              <TableRowComponent key={branch.id} branch={branch} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </Card>
   );
 };
 
-export default Table;
+export default TableComponent;
