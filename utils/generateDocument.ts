@@ -86,6 +86,10 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
                     paragraphLoop: true,
                 });
 
+                // Format meter readings to always show two decimal places
+                const formattedStartReading = input.startReading ? Number(input.startReading).toFixed(2) : '';
+                const formattedEndReading = input.endReading ? Number(input.endReading).toFixed(2) : '';
+                
                 // render the document (replace all occurences of {first_name} by John, {last_name} by Doe, ...)
                 doc.render({
                     contact: companyDetails["contact"],
@@ -108,8 +112,8 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
                         cpm: formatCpm(branchDetails["cpm"]), // Format cpm to 3 decimal places
                     } : {
                         // Other templates
-                        start: input.startReading,
-                        end: input.endReading,
+                        start: formattedStartReading,
+                        end: formattedEndReading,
                         hours: formattedHours,
                         consumption: branchDetails["consumption"],
                     }),
@@ -138,15 +142,70 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
     });
 };
 
+// Error types for more specific error handling
+export enum DocumentErrorType {
+    TEMPLATE_NOT_FOUND = 'TEMPLATE_NOT_FOUND',
+    CONVERSION_FAILED = 'CONVERSION_FAILED',
+    NETWORK_ERROR = 'NETWORK_ERROR',
+    API_ERROR = 'API_ERROR',
+    UNKNOWN_ERROR = 'UNKNOWN_ERROR'
+}
+
+// Custom error class for document generation
+export class DocumentGenerationError extends Error {
+    type: DocumentErrorType;
+    details?: any;
+
+    constructor(message: string, type: DocumentErrorType, details?: any) {
+        super(message);
+        this.name = 'DocumentGenerationError';
+        this.type = type;
+        this.details = details;
+    }
+}
+
 // Function for direct downloads with PDF conversion
-const generateDocument = async (input: IFormValues) => {
+const generateDocument = async (input: IFormValues): Promise<void> => {
     try {
         // Use the generateAndSavePdf function from cloudConvertService
         // This will generate a DOCX blob, convert it to PDF, and save it
         await generateAndSavePdf(input, input.branch, generateDocumentAsBlob);
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Error generating document:', error);
-        alert('Failed to generate document. Please try again.');
+        
+        // Determine the type of error for more specific messaging
+        let errorType = DocumentErrorType.UNKNOWN_ERROR;
+        let errorMessage = 'Failed to generate document. Please try again.';
+        
+        // Convert error to a type with message property if it exists
+        const errorWithMessage = error as { message?: string; name?: string };
+        
+        if (errorWithMessage.message?.includes('template') || errorWithMessage.message?.includes('Template')) {
+            errorType = DocumentErrorType.TEMPLATE_NOT_FOUND;
+            errorMessage = 'Template file not found. Please check the template configuration.';
+        } else if (errorWithMessage.message?.includes('convert') || errorWithMessage.message?.includes('CloudConvert')) {
+            errorType = DocumentErrorType.CONVERSION_FAILED;
+            errorMessage = 'PDF conversion failed. Please try again or contact support if the issue persists.';
+        } else if (errorWithMessage.message?.includes('network') || errorWithMessage.name === 'NetworkError') {
+            errorType = DocumentErrorType.NETWORK_ERROR;
+            errorMessage = 'Network error. Please check your internet connection and try again.';
+        } else if (errorWithMessage.message?.includes('API') || errorWithMessage.message?.includes('api')) {
+            errorType = DocumentErrorType.API_ERROR;
+            errorMessage = 'API error. Please try again later or contact support.';
+        }
+        
+        // Create a custom error with more details
+        const documentError = new DocumentGenerationError(
+            errorMessage,
+            errorType,
+            { originalError: errorWithMessage, input }
+        );
+        
+        // Show a more specific alert message to the user
+        alert(errorMessage);
+        
+        // Re-throw the custom error so it can be caught by the caller
+        throw documentError;
     }
 }
 

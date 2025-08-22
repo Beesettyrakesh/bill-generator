@@ -2,7 +2,7 @@
 
 import { IBankBranch } from "@/interfaces/IBankBranch";
 import { useEffect, useState } from "react";
-import generateDocument, { generateDocumentAsBlob } from "@/utils/generateDocument";
+import generateDocument, { generateDocumentAsBlob, DocumentErrorType, DocumentGenerationError } from "@/utils/generateDocument";
 import calculateTotal from "@/utils/calculateTotal";
 import { useDocuments } from "@/contexts/DocumentContext";
 import { useFuelPrices } from "@/contexts/FuelPriceContext";
@@ -35,6 +35,7 @@ const TableRowComponent = (props: TableRowProps) => {
   const [fuelPrice, setFuelPrice] = useState("");
   const [total, setTotal] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [isGenerating, setIsGenerating] = useState(false);
   
   // Load cached fuel price when component mounts
   useEffect(() => {
@@ -175,11 +176,35 @@ const TableRowComponent = (props: TableRowProps) => {
       
     } catch (error) {
       console.error('Error adding document:', error);
-      alert('Failed to add document. Please try again.');
+      
+      // Handle specific error types
+      if (error instanceof DocumentGenerationError) {
+        // Error is already handled in generateDocument with specific messages
+        // We could add additional UI feedback here if needed
+        switch (error.type) {
+          case DocumentErrorType.TEMPLATE_NOT_FOUND:
+            console.error('Template error:', error.message);
+            break;
+          case DocumentErrorType.CONVERSION_FAILED:
+            console.error('Conversion error:', error.message);
+            break;
+          case DocumentErrorType.NETWORK_ERROR:
+            console.error('Network error:', error.message);
+            break;
+          case DocumentErrorType.API_ERROR:
+            console.error('API error:', error.message);
+            break;
+          default:
+            console.error('Unknown error:', error.message);
+        }
+      } else {
+        // Fallback for unexpected error types
+        alert('Failed to add document. Please try again.');
+      }
     }
   };
 
-  const validateAndGenerateDocument = () => {
+  const validateAndGenerateDocument = async () => {
     // Validate all fields before generating document
     const newErrors: ValidationErrors = {};
     newErrors.date = validateField('date', date);
@@ -202,16 +227,56 @@ const TableRowComponent = (props: TableRowProps) => {
       return;
     }
     
-    // If validation passes, generate the document
-    generateDocument({
-      branch,
-      date,
-      startReading,
-      endReading,
-      hours,
-      fuelPrice,
-      total,
-    });
+    // Set loading state to true before generating document
+    setIsGenerating(true);
+    
+    try {
+      // If validation passes, generate the document
+      await generateDocument({
+        branch,
+        date,
+        startReading,
+        endReading,
+        hours,
+        fuelPrice,
+        total,
+      });
+    } catch (error) {
+      console.error('Error generating document:', error);
+      
+      // Handle specific error types
+      if (error instanceof DocumentGenerationError) {
+        // Error is already handled in generateDocument with specific messages
+        // We could add additional UI feedback here if needed
+        switch (error.type) {
+          case DocumentErrorType.TEMPLATE_NOT_FOUND:
+            // Could add specific UI feedback for template errors
+            console.error('Template error:', error.message);
+            break;
+          case DocumentErrorType.CONVERSION_FAILED:
+            // Could add specific UI feedback for conversion errors
+            console.error('Conversion error:', error.message);
+            break;
+          case DocumentErrorType.NETWORK_ERROR:
+            // Could add specific UI feedback for network errors
+            console.error('Network error:', error.message);
+            break;
+          case DocumentErrorType.API_ERROR:
+            // Could add specific UI feedback for API errors
+            console.error('API error:', error.message);
+            break;
+          default:
+            // Unknown error
+            console.error('Unknown error:', error.message);
+        }
+      } else {
+        // Fallback for unexpected error types
+        alert('An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      // Set loading state back to false after document generation
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -304,10 +369,10 @@ const TableRowComponent = (props: TableRowProps) => {
             variant="default"
             size="sm"
             onClick={validateAndGenerateDocument}
-            disabled={!total}
+            disabled={!total || isGenerating}
             className="text-base"
           >
-            Generate
+            {isGenerating ? "Generating..." : "Generate"}
           </Button>
       </TableCell>
       
