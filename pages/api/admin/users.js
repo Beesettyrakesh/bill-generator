@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import clientPromise from "../../../lib/mongodb";
-import { hash } from "bcrypt";
+import { hash } from "bcryptjs";
 
 export default async function handler(req, res) {
   // Check if user is authenticated and has admin role
