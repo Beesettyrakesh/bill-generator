@@ -5,8 +5,8 @@ export const metadata = {
   description: 'Generate and manage bills for different branches',
   keywords: ['bill generator', 'invoice generator', 'document management'],
   icons: {
-    icon: '/electric-generator.png',
-    apple: '/electric-generator.png',
+    icon: '/generator.png',
+    apple: '/generator.png',
   },
 };
 
