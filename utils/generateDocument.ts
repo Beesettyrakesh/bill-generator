@@ -1,3 +1,5 @@
+"use client";
+
 import {IFormValues} from "@/interfaces/IFormValues";
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
@@ -14,10 +16,11 @@ import convertToWords from "@/utils/convertToWords";
 import formatHours from "@/utils/formatHours";
 import formatCpm from "@/utils/formatCpm";
 import { generateAndSavePdf } from "@/utils/cloudConvertService";
+import { getSession } from "next-auth/react";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-let PizZipUtils = null;
+// Define a variable for PizZipUtils
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let PizZipUtils: any = null;
 
 if (typeof window !== 'undefined') {
     import('pizzip/utils/index.js').then(function (r) {
@@ -25,17 +28,47 @@ if (typeof window !== 'undefined') {
     });
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-function loadFile(url, callback) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    PizZipUtils.getBinaryContent(url, callback);
+// Improved loadFile function with better error handling
+function loadFile(url: string, callback: (error: Error | null, content?: unknown) => void) {
+    if (!PizZipUtils) {
+        const error = new DocumentGenerationError(
+            "Template loading failed: PizZipUtils not initialized",
+            DocumentErrorType.TEMPLATE_LOADING_ERROR,
+            { templateUrl: url }
+        );
+        callback(error);
+        return;
+    }
+
+    PizZipUtils.getBinaryContent(url, (error: Error | null, content: ArrayBuffer) => {
+        if (error) {
+            // Create more specific error based on the nature of the failure
+            let errorType = DocumentErrorType.TEMPLATE_LOADING_ERROR;
+            let errorMessage = `Failed to load template: ${error.message}`;
+            
+            if (error.message?.includes('not found') || error.message?.includes('404')) {
+                errorType = DocumentErrorType.TEMPLATE_NOT_FOUND;
+                errorMessage = `Template file not found: ${url}`;
+            } else if (error.message?.includes('network') || error.message?.includes('connection')) {
+                errorType = DocumentErrorType.NETWORK_ERROR;
+                errorMessage = `Network error while loading template: ${error.message}`;
+            }
+            
+            const templateError = new DocumentGenerationError(
+                errorMessage,
+                errorType,
+                { originalError: error, templateUrl: url }
+            );
+            callback(templateError);
+            return;
+        }
+        callback(null, content);
+    });
 }
 
 // Function that returns a blob instead of downloading
 export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const branchDetails: IBranchConfig = getBranchDetails(input.branch)
         const companyDetails: ICompanyConfig = getCompanyDetails(branchDetails["company"])
 
@@ -64,23 +97,35 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
         // Format hours to display in HH.MM format
         const formattedHours = formatHours(input.hours)
 
+        // Get session to determine if user is in demo mode
+        let isDemo = false;
+        try {
+            const session = await getSession();
+            isDemo = session?.user?.role === "demo";
+        } catch (error) {
+            console.error("Error getting session:", error);
+        }
+        
+        // Use demo templates for demo users, regular templates for others
+        const templatePath = isDemo ? 'res/demo/' : 'res/';
+        
         if (template == "START_AND_END")
-            url = 'res/StartEnd_Template.docx'
+            url = `${templatePath}StartEnd_Template.docx`
         else if (template == "MINUTES")
-            url = 'res/Minutes_Template.docx'
+            url = `${templatePath}Minutes_Template.docx`
         else
-            url = 'res/Hours_Template.docx'
+            url = `${templatePath}Hours_Template.docx`
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         loadFile(url, function (error, content) {
             if (error) {
+                console.error('Template loading error:', error);
                 reject(error);
                 return;
             }
             
             try {
-                const zip = new PizZip(content);
+                // Cast content to appropriate type for PizZip
+                const zip = new PizZip(content as string | ArrayBuffer);
                 const doc = new Docxtemplater(zip, {
                     linebreaks: true,
                     paragraphLoop: true,
@@ -145,6 +190,7 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
 // Error types for more specific error handling
 export enum DocumentErrorType {
     TEMPLATE_NOT_FOUND = 'TEMPLATE_NOT_FOUND',
+    TEMPLATE_LOADING_ERROR = 'TEMPLATE_LOADING_ERROR',
     CONVERSION_FAILED = 'CONVERSION_FAILED',
     NETWORK_ERROR = 'NETWORK_ERROR',
     API_ERROR = 'API_ERROR',
@@ -154,9 +200,9 @@ export enum DocumentErrorType {
 // Custom error class for document generation
 export class DocumentGenerationError extends Error {
     type: DocumentErrorType;
-    details?: any;
+    details?: Record<string, unknown>;
 
-    constructor(message: string, type: DocumentErrorType, details?: any) {
+    constructor(message: string, type: DocumentErrorType, details?: Record<string, unknown>) {
         super(message);
         this.name = 'DocumentGenerationError';
         this.type = type;

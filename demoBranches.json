@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Demo Branch 1",
+    "template": "START_AND_END",
+    "company": "DEMO COMPANY"
+  },
+  {
+    "id": 2,
+    "name": "Demo Branch 2",
+    "template": "MINUTES",
+    "company": "DEMO COMPANY"
+  },
+  {
+    "id": 3,
+    "name": "Demo Branch 3",
+    "template": "HOURS",
+    "company": "DEMO COMPANY"
+  }
+]

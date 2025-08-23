@@ -13,10 +13,12 @@ The Bill Generator application follows a modern React-based architecture using N
 - Utility functions for calculations and data transformations
 - Document generation logic
 - Validation rules
+- Authentication logic
 
 ### 3. Data Layer
 - JSON configuration files for branch and company data
 - Context-based state management for document queue
+- Authentication state management with NextAuth.js
 
 ## Key Design Patterns
 
@@ -117,6 +119,27 @@ Add Button → handleAddDocument() → generateDocumentAsBlob() → addDocument(
 - Form-level validation before document generation
 - Required fields vary based on branch template type
 
+## Authentication System
+
+### 1. Authentication Flow
+```
+Login Page → NextAuth.js → JWT Token → Session → Protected Routes
+```
+
+### 2. User Types
+- **Regular Users**: Authenticated with username/password
+- **Demo Users**: Special access with predefined credentials
+
+### 3. Authentication Components
+- `UserNav`: Displays current user and logout button
+- `LoginPage`: Handles user authentication
+- `Middleware`: Protects routes based on authentication status
+
+### 4. Session Management
+- JWT-based authentication with NextAuth.js
+- Server-side session validation via middleware
+- Client-side session access via useSession hook
+
 ## Technical Decisions
 
 1. **Next.js Framework**: Provides server-side rendering capabilities and modern React features
@@ -125,3 +148,5 @@ Add Button → handleAddDocument() → generateDocumentAsBlob() → addDocument(
 4. **File-saver**: Browser-compatible file download functionality
 5. **TypeScript**: Type safety and improved developer experience
 6. **CSS Modules**: Component-scoped styling to prevent conflicts
+7. **NextAuth.js**: Authentication framework for Next.js applications
+8. **bcrypt**: Secure password hashing for user credentials

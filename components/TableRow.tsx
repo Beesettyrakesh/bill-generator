@@ -10,6 +10,14 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from "@/components/ui/dialog";
 
 // Validation types
 interface ValidationErrors {
@@ -36,6 +44,7 @@ const TableRowComponent = (props: TableRowProps) => {
   const [total, setTotal] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   
   // Load cached fuel price when component mounts
   useEffect(() => {
@@ -53,7 +62,14 @@ const TableRowComponent = (props: TableRowProps) => {
     console.log(`TableRow(${branch}): Persistence verification: ${isPersistenceWorking ? 'OK' : 'FAILED'}`);
   }, [branch, fuelPrices, verifyPersistence]);
 
-  const reset = () => {
+  const handleResetClick = () => {
+    // Only show dialog if there's data to clear
+    if (date || startReading || endReading || hours || fuelPrice) {
+      setShowResetConfirmation(true);
+    }
+  };
+
+  const confirmReset = () => {
     setDate("");
     setStartReading("");
     setEndReading("");
@@ -61,6 +77,7 @@ const TableRowComponent = (props: TableRowProps) => {
     setFuelPrice("");
     setTotal("");
     setErrors({});
+    setShowResetConfirmation(false);
   };
   
   // Validate form fields
@@ -281,8 +298,8 @@ const TableRowComponent = (props: TableRowProps) => {
 
   return (
     <TableRow>
-      <TableCell className="font-medium text-base">{props.branch.name}</TableCell>
-      <TableCell>
+      <TableCell className="font-medium text-base" data-label="Branch">{props.branch.name}</TableCell>
+      <TableCell data-label="Date">
         <div className="relative">
           <Input
             type="date"
@@ -296,7 +313,7 @@ const TableRowComponent = (props: TableRowProps) => {
       
       {props.branch.template === "START_AND_END" ? (
         <>
-          <TableCell>
+          <TableCell data-label="Start Reading">
             <div className="relative">
               <Input
                 type="text"
@@ -308,7 +325,7 @@ const TableRowComponent = (props: TableRowProps) => {
               {errors.startReading && <div className="text-xs text-destructive mt-1">{errors.startReading}</div>}
             </div>
           </TableCell>
-          <TableCell>
+          <TableCell data-label="End Reading">
             <div className="relative">
               <Input
                 type="text"
@@ -323,12 +340,12 @@ const TableRowComponent = (props: TableRowProps) => {
         </>
       ) : (
         <>
-          <TableCell></TableCell>
-          <TableCell></TableCell>
+          <TableCell data-label="Start Reading"></TableCell>
+          <TableCell data-label="End Reading"></TableCell>
         </>
       )}
       
-      <TableCell>
+      <TableCell data-label={props.branch.template === "MINUTES" ? "Minutes" : "Hours"}>
         <div className="relative">
           <Input
             type="text"
@@ -341,7 +358,7 @@ const TableRowComponent = (props: TableRowProps) => {
         </div>
       </TableCell>
       
-      <TableCell>
+      <TableCell data-label="Fuel Price">
         <div className="relative">
           <Input
             type="text"
@@ -362,9 +379,9 @@ const TableRowComponent = (props: TableRowProps) => {
         </div>
       </TableCell>
       
-      <TableCell className="font-medium text-base">{total ? `₹${total}` : "-"}</TableCell>
+      <TableCell className="font-medium text-base" data-label="Total">{total ? `₹${total}` : "-"}</TableCell>
       
-      <TableCell>
+      <TableCell data-label="Generate">
           <Button
             variant="default"
             size="sm"
@@ -376,7 +393,7 @@ const TableRowComponent = (props: TableRowProps) => {
           </Button>
       </TableCell>
       
-      <TableCell>
+      <TableCell data-label="Add">
           <Button
             variant="secondary"
             size="sm"
@@ -388,17 +405,37 @@ const TableRowComponent = (props: TableRowProps) => {
           </Button>
       </TableCell>
       
-      <TableCell>
+      <TableCell data-label="Reset">
           <Button
             variant="outline"
             size="sm"
-            onClick={reset}
+            onClick={handleResetClick}
             disabled={!date && !startReading && !endReading && !hours && !fuelPrice}
             className="text-base"
           >
             Reset
           </Button>
       </TableCell>
+
+      {/* Reset Confirmation Dialog */}
+      <Dialog open={showResetConfirmation} onOpenChange={setShowResetConfirmation}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Reset</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to reset all fields? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowResetConfirmation(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmReset}>
+              Reset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TableRow>
   );
 };

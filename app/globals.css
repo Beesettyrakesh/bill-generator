@@ -100,6 +100,9 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
 }
 
 /* Header Styles */
@@ -117,10 +120,11 @@ body {
 
 /* Main Content Area */
 .app-main {
-  @apply flex-1 p-4 md:px-8 pt-2 pb-8 max-w-[98%] mx-auto w-full;
+  @apply flex-1 p-4 md:px-8 pt-2 pb-8 max-w-[98%] mx-auto w-full flex flex-col;
+  min-height: calc(100vh - 140px); /* Adjust based on header and footer height */
 }
 
 /* Footer Styles */
 .app-footer {
-  @apply bg-muted py-4 text-center text-sm border-t border-border mt-8;
+  @apply bg-muted py-4 text-center text-sm border-t border-border;
 }

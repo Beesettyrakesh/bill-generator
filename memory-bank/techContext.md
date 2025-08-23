@@ -7,6 +7,12 @@
 - **React**: UI component library for building the user interface
 - **TypeScript**: Typed superset of JavaScript for improved developer experience and code quality
 
+### Authentication
+- **NextAuth.js**: Authentication framework for Next.js applications
+- **bcrypt**: Library for secure password hashing
+- **JWT**: JSON Web Tokens for secure authentication
+- **Middleware**: Next.js middleware for route protection
+
 ### Styling
 - **CSS Modules**: Component-scoped CSS to prevent style conflicts
 - **Tailwind CSS**: Utility-first CSS framework for rapid UI development
@@ -15,7 +21,7 @@
 - **Docxtemplater**: Library for generating DOCX documents from templates
 - **PizZip**: Library for working with ZIP files (used by Docxtemplater)
 - **File-saver**: Library for saving files on the client-side
-- **CloudConvert API**: Third-party service for converting DOCX to PDF
+- **CloudConvert API**: Third-party service for converting DOCX to PDF (server-side only)
 - **Formidable**: Node.js module for parsing form data, used in API routes
 
 ### State Management
@@ -34,11 +40,13 @@
 ```json
 {
   "dependencies": {
+    "bcrypt": "^5.x.x",
     "cloudconvert": "^3.0.0",
     "docxtemplater": "^3.x.x",
     "file-saver": "^2.x.x",
     "formidable": "^3.5.4",
-    "next": "^13.x.x",
+    "next": "^14.x.x",
+    "next-auth": "^4.x.x",
     "pizzip": "^3.x.x",
     "react": "^18.x.x",
     "react-dom": "^18.x.x"
@@ -78,11 +86,16 @@ bill-generator/
 ├── app/                    # Next.js app directory
 │   ├── globals.css         # Global styles
 │   ├── layout.tsx          # Root layout component
-│   └── page.tsx            # Main page component
+│   ├── page.tsx            # Main page component
+│   ├── providers.tsx       # Auth providers wrapper
+│   └── login/              # Login page directory
+│       └── page.tsx        # Login page component
 ├── components/             # React components
 │   ├── DocumentList.tsx    # Component for managing selected documents
+│   ├── DemoModeIndicator.tsx # Component for showing demo mode banner
 │   ├── Table.tsx           # Table container component
-│   └── TableRow.tsx        # Component for individual branch rows
+│   ├── TableRow.tsx        # Component for individual branch rows
+│   └── UserNav.tsx         # Component for user info and logout button
 ├── config/                 # Configuration files
 │   ├── branchConfig.ts     # Branch-specific configurations
 │   └── companyConfig.ts    # Company-specific configurations
@@ -99,7 +112,9 @@ bill-generator/
 │   └── IFormValues.ts      # Interface for form values
 ├── pages/                  # Next.js pages directory
 │   └── api/                # API routes
-│       └── convert-to-pdf.js # PDF conversion API route
+│       ├── convert-to-pdf.js # PDF conversion API route
+│       └── auth/           # Authentication API routes
+│           └── [...nextauth].js # NextAuth.js configuration
 ├── public/                 # Static assets
 │   └── res/                # Document templates
 │       ├── Hours_Template.docx
@@ -118,14 +133,15 @@ bill-generator/
 │   ├── getCompanyDetails.ts# Get company configuration
 │   ├── getPreviousMonth.ts # Get previous month name
 │   ├── mergeDocx.ts        # Merge multiple DOCX files
-│   ├── pdfUtils.ts         # PDF utility functions
 │   └── roundOffTotal.ts    # Round off total amount
 ├── __tests__/              # Test files
 │   ├── calculateTotalTest.ts
 │   └── convertToWordsTest.ts
+├── auth-config.js          # Authentication user configuration
 ├── branches.json           # Branch data
 ├── jest.config.ts          # Jest configuration
 ├── jest.setup.ts           # Jest setup
+├── middleware.ts           # Next.js middleware for route protection
 ├── next.config.mjs         # Next.js configuration
 ├── package.json            # Project dependencies
 ├── postcss.config.mjs      # PostCSS configuration
@@ -154,8 +170,23 @@ bill-generator/
 - No persistent server-side storage of generated documents
 - Temporary file storage during conversion process
 - No sensitive data transmission beyond document content
+- Authentication using secure JWT tokens
+- Password hashing with bcrypt for secure credential storage
+- Protected routes via Next.js middleware
+- Session management via NextAuth.js
+- Demo mode with limited access for recruiters
 
 ## Data Flow Architecture
+
+### Authentication Flow
+1. User enters credentials on login page or clicks "Access Demo"
+2. Credentials sent to NextAuth.js API route
+3. NextAuth.js verifies credentials against auth-config.js
+4. JWT token generated and stored in cookies
+5. User redirected to home page
+6. Protected routes check authentication via middleware
+7. User session maintained via NextAuth.js session management
+8. Logout clears session and redirects to login page
 
 ### Configuration Data Flow
 1. Branch data loaded from `branches.json`
@@ -171,7 +202,7 @@ bill-generator/
 6. DOCX document generated client-side
 7. For PDF output:
    a. DOCX sent to server-side API route
-   b. API route sends DOCX to CloudConvert for conversion
+   b. API route sends DOCX to CloudConvert for conversion using the CloudConvert API
    c. Converted PDF returned to client
    d. Fallback to DOCX if conversion fails
 8. Generated document saved or added to batch queue
@@ -204,3 +235,13 @@ npm run build
    - Implement caching for frequently generated documents
    - Consider alternative conversion engines based on document complexity
 7. **API Error Handling**: Improve error handling for CloudConvert API failures
+8. **Authentication Enhancements**:
+   - User registration functionality
+   - Password reset capabilities
+   - More granular role-based permissions
+   - Enhanced session management
+   - User preferences storage
+9. **React Hydration**:
+   - Continue monitoring for hydration errors during authentication state changes
+   - Ensure proper separation of server and client components
+   - Implement consistent conditional rendering patterns

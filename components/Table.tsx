@@ -1,5 +1,9 @@
+"use client";
+
 import TableRowComponent from "@/components/TableRow";
 import branchData from "../branches.json";
+import demoBranchData from "../demoBranches.json";
+import { useSession } from "next-auth/react";
 import {
   Table,
   TableBody,
@@ -9,12 +13,15 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import "../css/responsive.css";
 
 const TableComponent = () => {
+  const { data: session } = useSession();
+  const branches = session?.user?.role === "demo" ? demoBranchData : branchData;
   return (
     <Card className="w-full shadow-md">
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border responsive-container">
+        <Table className="mobile-card-view">
           <TableHeader>
             <TableRow className="bg-primary hover:bg-primary">
               <TableHead className={cn("text-primary-foreground font-heading text-base")}>Branch</TableHead>
@@ -30,7 +37,7 @@ const TableComponent = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {branchData.map((branch) => (
+            {branches.map((branch) => (
               <TableRowComponent key={branch.id} branch={branch} />
             ))}
           </TableBody>
