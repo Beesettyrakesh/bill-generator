@@ -1,13 +1,13 @@
 "use client";
 
-import { useSession, SessionProvider } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Table from "@/components/Table";
 import DocumentList from "@/components/DocumentList";
 import MainLayout from "./main-layout";
 
-function HomeContent() {
+export default function Home() {
   const { status } = useSession();
   const router = useRouter();
 
@@ -37,12 +37,4 @@ function HomeContent() {
 
   // Return empty div while redirecting
   return <div></div>;
-}
-
-export default function Home() {
-  return (
-    <SessionProvider>
-      <HomeContent />
-    </SessionProvider>
-  );
 }

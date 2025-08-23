@@ -1,3 +1,5 @@
+import ClientSessionProvider from './client-session-provider';
+
 export const metadata = {
   title: 'Bill Generator',
   description: 'Generate and manage bills for different branches',
@@ -9,7 +11,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="overflow-x-hidden">
-        {children}
+        <ClientSessionProvider>{children}</ClientSessionProvider>
       </body>
     </html>
   );
