@@ -1,9 +1,13 @@
 import ClientSessionProvider from './client-session-provider';
 
 export const metadata = {
-  title: 'Bill Generator',
+  title: 'Billezy',
   description: 'Generate and manage bills for different branches',
   keywords: ['bill generator', 'invoice generator', 'document management'],
+  icons: {
+    icon: '/electric-generator.png',
+    apple: '/electric-generator.png',
+  },
 };
 
 export default function RootLayout({ children }) {

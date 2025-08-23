@@ -75,7 +75,7 @@ export default function LoginPage() {
     <div className="flex items-center justify-center h-[calc(100vh-120px)] bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Bill Generator Login</CardTitle>
+          <CardTitle className="text-2xl text-center">Login</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

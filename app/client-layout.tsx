@@ -24,7 +24,7 @@ export default function ClientLayout({
         <DemoModeIndicator />
         <header className="app-header sticky top-0 z-50">
           <div className="max-w-[98%] mx-auto flex justify-between items-center">
-            <h1 className="text-3xl font-bold font-heading">Bill Generator</h1>
+            <h1 className="text-3xl font-bold font-heading">Billezy</h1>
             {/* Only show UserNav if not on login page */}
             {!isLoginPage && <UserNav />}
           </div>
@@ -33,7 +33,7 @@ export default function ClientLayout({
           {children}
         </main>
         <footer className="app-footer">
-          <p className="font-serif">&copy; {new Date().getFullYear()} Bill Generator</p>
+          <p className="font-serif">&copy; {new Date().getFullYear()} Billezy</p>
         </footer>
         </FuelPriceProvider>
       </DocumentProvider>
