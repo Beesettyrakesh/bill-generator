@@ -22,9 +22,10 @@ export default function UserNav() {
         {session.user?.name || session.user?.role || "User"}
       </div>
       <Button 
-        variant="outline" 
+        variant="secondary" 
         size="sm" 
         onClick={() => signOut({ callbackUrl: "/login" })}
+        className="text-secondary-foreground hover:bg-secondary/80"
       >
         Logout
       </Button>
