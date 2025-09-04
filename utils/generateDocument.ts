@@ -95,7 +95,7 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
         }
         
         // Format hours to display in HH.MM format
-        const formattedHours = formatHours(input.hours)
+        const formattedHours = formatHours(input.hours, template)
 
         // Get session to determine if user is in demo mode
         let isDemo = false;

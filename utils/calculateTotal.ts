@@ -13,6 +13,11 @@ const calculateTotal = (hours: number, fuelPrice: number, branch: string): numbe
     }
 
     const consumption: number = branchDetails["consumption"]
+
+    if(template === "START_AND_END") {
+        return hours * consumption * fuelPrice
+    }
+    
     const decimalsMap:Map<number, number> = new Map<number, number>()
     decimalsMap.set(15, 0.25)
     decimalsMap.set(30, 0.50)
