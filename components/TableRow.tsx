@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dialog";
 import formatHours from "@/utils/formatHours";
 
-// Validation types
 interface ValidationErrors {
   date?: string;
   startReading?: string;
@@ -51,7 +50,6 @@ const TableRowComponent = (props: TableRowProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
 
-  // Load cached fuel price when component mounts
   useEffect(() => {
     console.log(`TableRow(${branch}): Loading cached fuel price`);
     const cachedPrice = fuelPrices[branch];
@@ -62,7 +60,6 @@ const TableRowComponent = (props: TableRowProps) => {
       console.log(`TableRow(${branch}): No cached price found`);
     }
 
-    // Check if persistence is working
     const isPersistenceWorking = verifyPersistence();
     console.log(
       `TableRow(${branch}): Persistence verification: ${
@@ -72,7 +69,6 @@ const TableRowComponent = (props: TableRowProps) => {
   }, [branch, fuelPrices, verifyPersistence]);
 
   const handleResetClick = () => {
-    // Only show dialog if there's data to clear
     if (date || startReading || endReading || hours || fuelPrice) {
       setShowResetConfirmation(true);
     }
@@ -88,7 +84,6 @@ const TableRowComponent = (props: TableRowProps) => {
     setShowResetConfirmation(false);
   };
 
-  // Validate form fields
   const validateField = (name: string, value: string): string | undefined => {
     switch (name) {
       case "date":
@@ -129,7 +124,6 @@ const TableRowComponent = (props: TableRowProps) => {
     }
   };
 
-  // Auto-calculate hours for START_AND_END template branches
   useEffect(() => {
     if (
       props.branch.template === "START_AND_END" &&
@@ -162,7 +156,6 @@ const TableRowComponent = (props: TableRowProps) => {
   const handleAddDocument = async () => {
     if (!total) return;
 
-    // Validate all fields before submission
     const newErrors: ValidationErrors = {};
     newErrors.date = validateField("date", date);
     if (props.branch.template === "START_AND_END") {
@@ -172,14 +165,12 @@ const TableRowComponent = (props: TableRowProps) => {
     newErrors.hours = validateField("hours", hours);
     newErrors.fuelPrice = validateField("fuelPrice", fuelPrice);
 
-    // Filter out undefined errors
     const filteredErrors = Object.fromEntries(
       Object.entries(newErrors).filter(([, value]) => value !== undefined)
     );
 
     setErrors(filteredErrors);
 
-    // If there are errors, don't proceed
     if (Object.keys(filteredErrors).length > 0) {
       return;
     }
@@ -209,10 +200,7 @@ const TableRowComponent = (props: TableRowProps) => {
     } catch (error) {
       console.error("Error adding document:", error);
 
-      // Handle specific error types
       if (error instanceof DocumentGenerationError) {
-        // Error is already handled in generateDocument with specific messages
-        // We could add additional UI feedback here if needed
         switch (error.type) {
           case DocumentErrorType.TEMPLATE_NOT_FOUND:
             console.error("Template error:", error.message);
@@ -230,14 +218,12 @@ const TableRowComponent = (props: TableRowProps) => {
             console.error("Unknown error:", error.message);
         }
       } else {
-        // Fallback for unexpected error types
         alert("Failed to add document. Please try again.");
       }
     }
   };
 
   const validateAndGenerateDocument = async () => {
-    // Validate all fields before generating document
     const newErrors: ValidationErrors = {};
     newErrors.date = validateField("date", date);
     if (props.branch.template === "START_AND_END") {
@@ -247,23 +233,19 @@ const TableRowComponent = (props: TableRowProps) => {
     newErrors.hours = validateField("hours", hours);
     newErrors.fuelPrice = validateField("fuelPrice", fuelPrice);
 
-    // Filter out undefined errors
     const filteredErrors = Object.fromEntries(
       Object.entries(newErrors).filter(([, value]) => value !== undefined)
     );
 
     setErrors(filteredErrors);
 
-    // If there are errors, don't proceed
     if (Object.keys(filteredErrors).length > 0) {
       return;
     }
 
-    // Set loading state to true before generating document
     setIsGenerating(true);
 
     try {
-      // If validation passes, generate the document
       await generateDocument({
         branch,
         date,
@@ -282,31 +264,24 @@ const TableRowComponent = (props: TableRowProps) => {
         // We could add additional UI feedback here if needed
         switch (error.type) {
           case DocumentErrorType.TEMPLATE_NOT_FOUND:
-            // Could add specific UI feedback for template errors
             console.error("Template error:", error.message);
             break;
           case DocumentErrorType.CONVERSION_FAILED:
-            // Could add specific UI feedback for conversion errors
             console.error("Conversion error:", error.message);
             break;
           case DocumentErrorType.NETWORK_ERROR:
-            // Could add specific UI feedback for network errors
             console.error("Network error:", error.message);
             break;
           case DocumentErrorType.API_ERROR:
-            // Could add specific UI feedback for API errors
             console.error("API error:", error.message);
             break;
           default:
-            // Unknown error
             console.error("Unknown error:", error.message);
         }
       } else {
-        // Fallback for unexpected error types
         alert("An unexpected error occurred. Please try again.");
       }
     } finally {
-      // Set loading state back to false after document generation
       setIsGenerating(false);
     }
   };
@@ -471,7 +446,6 @@ const TableRowComponent = (props: TableRowProps) => {
         </Button>
       </TableCell>
 
-      {/* Reset Confirmation Dialog */}
       <Dialog
         open={showResetConfirmation}
         onOpenChange={setShowResetConfirmation}

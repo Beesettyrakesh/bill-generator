@@ -43,24 +43,19 @@ export async function convertToPdf(docxBlob, filename) {
  */
 export async function generateAndSavePdf(input, branch, generateDocxBlob) {
   try {
-    // First generate the DOCX blob
     const docxBlob = await generateDocxBlob(input);
     
     try {
-      // Convert to PDF
       const pdfBlob = await convertToPdf(docxBlob, branch);
       
-      // Create a download link
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `${branch}.pdf`;
       
-      // Trigger the download
       document.body.appendChild(link);
       link.click();
       
-      // Clean up
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
