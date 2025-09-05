@@ -2,7 +2,11 @@
 
 import { IBankBranch } from "@/interfaces/IBankBranch";
 import { useEffect, useState } from "react";
-import generateDocument, { generateDocumentAsBlob, DocumentErrorType, DocumentGenerationError } from "@/utils/generateDocument";
+import generateDocument, {
+  generateDocumentAsBlob,
+  DocumentErrorType,
+  DocumentGenerationError,
+} from "@/utils/generateDocument";
 import calculateTotal from "@/utils/calculateTotal";
 import { useDocuments } from "@/contexts/DocumentContext";
 import { useFuelPrices } from "@/contexts/FuelPriceContext";
@@ -10,14 +14,15 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import formatHours from "@/utils/formatHours";
 
 // Validation types
 interface ValidationErrors {
@@ -45,7 +50,7 @@ const TableRowComponent = (props: TableRowProps) => {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
-  
+
   // Load cached fuel price when component mounts
   useEffect(() => {
     console.log(`TableRow(${branch}): Loading cached fuel price`);
@@ -56,10 +61,14 @@ const TableRowComponent = (props: TableRowProps) => {
     } else {
       console.log(`TableRow(${branch}): No cached price found`);
     }
-    
+
     // Check if persistence is working
     const isPersistenceWorking = verifyPersistence();
-    console.log(`TableRow(${branch}): Persistence verification: ${isPersistenceWorking ? 'OK' : 'FAILED'}`);
+    console.log(
+      `TableRow(${branch}): Persistence verification: ${
+        isPersistenceWorking ? "OK" : "FAILED"
+      }`
+    );
   }, [branch, fuelPrices, verifyPersistence]);
 
   const handleResetClick = () => {
@@ -74,58 +83,65 @@ const TableRowComponent = (props: TableRowProps) => {
     setStartReading("");
     setEndReading("");
     setHours("");
-    setFuelPrice("");
     setTotal("");
     setErrors({});
     setShowResetConfirmation(false);
   };
-  
+
   // Validate form fields
   const validateField = (name: string, value: string): string | undefined => {
     switch (name) {
-      case 'date':
-        if (!value) return 'Date is required';
+      case "date":
+        if (!value) return "Date is required";
         return undefined;
-      case 'startReading':
-        if (props.branch.template === 'START_AND_END') {
-          if (!value) return 'Start reading is required';
-          if (isNaN(Number(value))) return 'Must be a number';
+      case "startReading":
+        if (props.branch.template === "START_AND_END") {
+          if (!value) return "Start reading is required";
+          if (isNaN(Number(value))) return "Must be a number";
         }
         return undefined;
-      case 'endReading':
-        if (props.branch.template === 'START_AND_END') {
-          if (!value) return 'End reading is required';
-          if (isNaN(Number(value))) return 'Must be a number';
-          if (Number(value) <= Number(startReading)) return 'Must be greater than start reading';
+      case "endReading":
+        if (props.branch.template === "START_AND_END") {
+          if (!value) return "End reading is required";
+          if (isNaN(Number(value))) return "Must be a number";
+          if (Number(value) <= Number(startReading))
+            return "Must be greater than start reading";
         }
         return undefined;
-      case 'hours':
-        if (!value) return 'Hours is required';
-        if (isNaN(Number(value))) return 'Must be a number';
-        if (Number(value) <= 0) return 'Must be positive';
-        if (props.branch.template === 'MINUTES' && !Number.isInteger(Number(value))) {
-          return 'Minutes must be a whole number';
+      case "hours":
+        if (!value) return "Hours is required";
+        if (isNaN(Number(value))) return "Must be a number";
+        if (Number(value) <= 0) return "Must be positive";
+        if (
+          props.branch.template === "MINUTES" &&
+          !Number.isInteger(Number(value))
+        ) {
+          return "Minutes must be a whole number";
         }
         return undefined;
-      case 'fuelPrice':
-        if (!value) return 'Fuel price is required';
-        if (isNaN(Number(value))) return 'Must be a number';
-        if (Number(value) <= 0) return 'Must be positive';
+      case "fuelPrice":
+        if (!value) return "Fuel price is required";
+        if (isNaN(Number(value))) return "Must be a number";
+        if (Number(value) <= 0) return "Must be positive";
         return undefined;
       default:
         return undefined;
     }
   };
-  
+
   // Auto-calculate hours for START_AND_END template branches
   useEffect(() => {
-    if (props.branch.template === 'START_AND_END' && startReading && endReading) {
+    if (
+      props.branch.template === "START_AND_END" &&
+      startReading &&
+      endReading
+    ) {
       const start = Number(startReading);
       const end = Number(endReading);
-      
+
       if (!isNaN(start) && !isNaN(end) && end > start) {
         const calculatedHours = (end - start).toString();
-        setHours(calculatedHours);
+        setHours(formatHours(calculatedHours, "START_AND_END"));
       }
     }
   }, [startReading, endReading, props.branch.template]);
@@ -145,32 +161,32 @@ const TableRowComponent = (props: TableRowProps) => {
 
   const handleAddDocument = async () => {
     if (!total) return;
-    
+
     // Validate all fields before submission
     const newErrors: ValidationErrors = {};
-    newErrors.date = validateField('date', date);
-    if (props.branch.template === 'START_AND_END') {
-      newErrors.startReading = validateField('startReading', startReading);
-      newErrors.endReading = validateField('endReading', endReading);
+    newErrors.date = validateField("date", date);
+    if (props.branch.template === "START_AND_END") {
+      newErrors.startReading = validateField("startReading", startReading);
+      newErrors.endReading = validateField("endReading", endReading);
     }
-    newErrors.hours = validateField('hours', hours);
-    newErrors.fuelPrice = validateField('fuelPrice', fuelPrice);
-    
+    newErrors.hours = validateField("hours", hours);
+    newErrors.fuelPrice = validateField("fuelPrice", fuelPrice);
+
     // Filter out undefined errors
     const filteredErrors = Object.fromEntries(
       Object.entries(newErrors).filter(([, value]) => value !== undefined)
     );
-    
+
     setErrors(filteredErrors);
-    
+
     // If there are errors, don't proceed
     if (Object.keys(filteredErrors).length > 0) {
       return;
     }
-    
+
     try {
-      console.log('Adding document for branch:', branch);
-      
+      console.log("Adding document for branch:", branch);
+
       const formValues = {
         branch,
         date,
@@ -180,43 +196,42 @@ const TableRowComponent = (props: TableRowProps) => {
         fuelPrice,
         total,
       };
-      
-      console.log('Form values:', formValues);
-      
+
+      console.log("Form values:", formValues);
+
       // Generate document blob
       const docBlob = await generateDocumentAsBlob(formValues);
-      console.log('Document blob generated:', docBlob);
-      
+      console.log("Document blob generated:", docBlob);
+
       // Add to document list
       addDocument({ branch, formValues, docxBlob: docBlob });
-      console.log('Document added to list');
-      
+      console.log("Document added to list");
     } catch (error) {
-      console.error('Error adding document:', error);
-      
+      console.error("Error adding document:", error);
+
       // Handle specific error types
       if (error instanceof DocumentGenerationError) {
         // Error is already handled in generateDocument with specific messages
         // We could add additional UI feedback here if needed
         switch (error.type) {
           case DocumentErrorType.TEMPLATE_NOT_FOUND:
-            console.error('Template error:', error.message);
+            console.error("Template error:", error.message);
             break;
           case DocumentErrorType.CONVERSION_FAILED:
-            console.error('Conversion error:', error.message);
+            console.error("Conversion error:", error.message);
             break;
           case DocumentErrorType.NETWORK_ERROR:
-            console.error('Network error:', error.message);
+            console.error("Network error:", error.message);
             break;
           case DocumentErrorType.API_ERROR:
-            console.error('API error:', error.message);
+            console.error("API error:", error.message);
             break;
           default:
-            console.error('Unknown error:', error.message);
+            console.error("Unknown error:", error.message);
         }
       } else {
         // Fallback for unexpected error types
-        alert('Failed to add document. Please try again.');
+        alert("Failed to add document. Please try again.");
       }
     }
   };
@@ -224,29 +239,29 @@ const TableRowComponent = (props: TableRowProps) => {
   const validateAndGenerateDocument = async () => {
     // Validate all fields before generating document
     const newErrors: ValidationErrors = {};
-    newErrors.date = validateField('date', date);
-    if (props.branch.template === 'START_AND_END') {
-      newErrors.startReading = validateField('startReading', startReading);
-      newErrors.endReading = validateField('endReading', endReading);
+    newErrors.date = validateField("date", date);
+    if (props.branch.template === "START_AND_END") {
+      newErrors.startReading = validateField("startReading", startReading);
+      newErrors.endReading = validateField("endReading", endReading);
     }
-    newErrors.hours = validateField('hours', hours);
-    newErrors.fuelPrice = validateField('fuelPrice', fuelPrice);
-    
+    newErrors.hours = validateField("hours", hours);
+    newErrors.fuelPrice = validateField("fuelPrice", fuelPrice);
+
     // Filter out undefined errors
     const filteredErrors = Object.fromEntries(
       Object.entries(newErrors).filter(([, value]) => value !== undefined)
     );
-    
+
     setErrors(filteredErrors);
-    
+
     // If there are errors, don't proceed
     if (Object.keys(filteredErrors).length > 0) {
       return;
     }
-    
+
     // Set loading state to true before generating document
     setIsGenerating(true);
-    
+
     try {
       // If validation passes, generate the document
       await generateDocument({
@@ -259,8 +274,8 @@ const TableRowComponent = (props: TableRowProps) => {
         total,
       });
     } catch (error) {
-      console.error('Error generating document:', error);
-      
+      console.error("Error generating document:", error);
+
       // Handle specific error types
       if (error instanceof DocumentGenerationError) {
         // Error is already handled in generateDocument with specific messages
@@ -268,27 +283,27 @@ const TableRowComponent = (props: TableRowProps) => {
         switch (error.type) {
           case DocumentErrorType.TEMPLATE_NOT_FOUND:
             // Could add specific UI feedback for template errors
-            console.error('Template error:', error.message);
+            console.error("Template error:", error.message);
             break;
           case DocumentErrorType.CONVERSION_FAILED:
             // Could add specific UI feedback for conversion errors
-            console.error('Conversion error:', error.message);
+            console.error("Conversion error:", error.message);
             break;
           case DocumentErrorType.NETWORK_ERROR:
             // Could add specific UI feedback for network errors
-            console.error('Network error:', error.message);
+            console.error("Network error:", error.message);
             break;
           case DocumentErrorType.API_ERROR:
             // Could add specific UI feedback for API errors
-            console.error('API error:', error.message);
+            console.error("API error:", error.message);
             break;
           default:
             // Unknown error
-            console.error('Unknown error:', error.message);
+            console.error("Unknown error:", error.message);
         }
       } else {
         // Fallback for unexpected error types
-        alert('An unexpected error occurred. Please try again.');
+        alert("An unexpected error occurred. Please try again.");
       }
     } finally {
       // Set loading state back to false after document generation
@@ -298,7 +313,9 @@ const TableRowComponent = (props: TableRowProps) => {
 
   return (
     <TableRow>
-      <TableCell className="font-medium text-base" data-label="Branch">{props.branch.name}</TableCell>
+      <TableCell className="font-medium text-base" data-label="Branch">
+        {props.branch.name}
+      </TableCell>
       <TableCell data-label="Date">
         <div className="relative">
           <Input
@@ -307,10 +324,12 @@ const TableRowComponent = (props: TableRowProps) => {
             onChange={(event) => setDate(event.target.value)}
             className={cn("text-base", errors.date && "border-destructive")}
           />
-          {errors.date && <div className="text-xs text-destructive mt-1">{errors.date}</div>}
+          {errors.date && (
+            <div className="text-xs text-destructive mt-1">{errors.date}</div>
+          )}
         </div>
       </TableCell>
-      
+
       {props.branch.template === "START_AND_END" ? (
         <>
           <TableCell data-label="Start Reading">
@@ -320,9 +339,16 @@ const TableRowComponent = (props: TableRowProps) => {
                 placeholder="Start reading"
                 value={startReading}
                 onChange={(event) => setStartReading(event.target.value)}
-                className={cn("text-base", errors.startReading && "border-destructive")}
+                className={cn(
+                  "text-base",
+                  errors.startReading && "border-destructive"
+                )}
               />
-              {errors.startReading && <div className="text-xs text-destructive mt-1">{errors.startReading}</div>}
+              {errors.startReading && (
+                <div className="text-xs text-destructive mt-1">
+                  {errors.startReading}
+                </div>
+              )}
             </div>
           </TableCell>
           <TableCell data-label="End Reading">
@@ -332,9 +358,16 @@ const TableRowComponent = (props: TableRowProps) => {
                 placeholder="End reading"
                 value={endReading}
                 onChange={(event) => setEndReading(event.target.value)}
-                className={cn("text-base", errors.endReading && "border-destructive")}
+                className={cn(
+                  "text-base",
+                  errors.endReading && "border-destructive"
+                )}
               />
-              {errors.endReading && <div className="text-xs text-destructive mt-1">{errors.endReading}</div>}
+              {errors.endReading && (
+                <div className="text-xs text-destructive mt-1">
+                  {errors.endReading}
+                </div>
+              )}
             </div>
           </TableCell>
         </>
@@ -344,20 +377,26 @@ const TableRowComponent = (props: TableRowProps) => {
           <TableCell data-label="End Reading"></TableCell>
         </>
       )}
-      
-      <TableCell data-label={props.branch.template === "MINUTES" ? "Minutes" : "Hours"}>
+
+      <TableCell
+        data-label={props.branch.template === "MINUTES" ? "Minutes" : "Hours"}
+      >
         <div className="relative">
           <Input
             type="text"
-            placeholder={props.branch.template === "MINUTES" ? "Minutes" : "Hours"}
+            placeholder={
+              props.branch.template === "MINUTES" ? "Minutes" : "Hours"
+            }
             value={hours}
             onChange={(event) => setHours(event.target.value)}
             className={cn("text-base", errors.hours && "border-destructive")}
           />
-          {errors.hours && <div className="text-xs text-destructive mt-1">{errors.hours}</div>}
+          {errors.hours && (
+            <div className="text-xs text-destructive mt-1">{errors.hours}</div>
+          )}
         </div>
       </TableCell>
-      
+
       <TableCell data-label="Fuel Price">
         <div className="relative">
           <Input
@@ -367,67 +406,89 @@ const TableRowComponent = (props: TableRowProps) => {
             onChange={(event) => {
               const newPrice = event.target.value;
               setFuelPrice(newPrice);
-              
+
               // Update the global fuel price if it's valid
-              if (newPrice && !isNaN(Number(newPrice)) && Number(newPrice) > 0) {
+              if (
+                newPrice &&
+                !isNaN(Number(newPrice)) &&
+                Number(newPrice) > 0
+              ) {
                 updateFuelPrice(branch, newPrice);
               }
             }}
-            className={cn("text-base", errors.fuelPrice && "border-destructive")}
+            className={cn(
+              "text-base",
+              errors.fuelPrice && "border-destructive"
+            )}
           />
-          {errors.fuelPrice && <div className="text-xs text-destructive mt-1">{errors.fuelPrice}</div>}
+          {errors.fuelPrice && (
+            <div className="text-xs text-destructive mt-1">
+              {errors.fuelPrice}
+            </div>
+          )}
         </div>
       </TableCell>
-      
-      <TableCell className="font-medium text-base" data-label="Total">{total ? `₹${total}` : "-"}</TableCell>
-      
+
+      <TableCell className="font-medium text-base" data-label="Total">
+        {total ? `₹${total}` : "-"}
+      </TableCell>
+
       <TableCell data-label="Generate">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={validateAndGenerateDocument}
-            disabled={!total || isGenerating}
-            className="text-base"
-          >
-            {isGenerating ? "Generating..." : "Generate"}
-          </Button>
+        <Button
+          variant="default"
+          size="sm"
+          onClick={validateAndGenerateDocument}
+          disabled={!total || isGenerating}
+          className="text-base"
+        >
+          {isGenerating ? "Generating..." : "Generate"}
+        </Button>
       </TableCell>
-      
+
       <TableCell data-label="Add">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleAddDocument}
-            disabled={!total}
-            className="text-base"
-          >
-            Add
-          </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleAddDocument}
+          disabled={!total}
+          className="text-base"
+        >
+          Add
+        </Button>
       </TableCell>
-      
+
       <TableCell data-label="Reset">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResetClick}
-            disabled={!date && !startReading && !endReading && !hours && !fuelPrice}
-            className="text-base"
-          >
-            Reset
-          </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleResetClick}
+          disabled={
+            !date && !startReading && !endReading && !hours && !fuelPrice
+          }
+          className="text-base"
+        >
+          Reset
+        </Button>
       </TableCell>
 
       {/* Reset Confirmation Dialog */}
-      <Dialog open={showResetConfirmation} onOpenChange={setShowResetConfirmation}>
+      <Dialog
+        open={showResetConfirmation}
+        onOpenChange={setShowResetConfirmation}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Reset</DialogTitle>
             <DialogDescription>
-              Are you sure you want to reset all fields? This action cannot be undone.
+              Are you sure you want to reset all fields? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowResetConfirmation(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowResetConfirmation(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={confirmReset}>

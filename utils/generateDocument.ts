@@ -28,7 +28,6 @@ if (typeof window !== 'undefined') {
     });
 }
 
-// Improved loadFile function with better error handling
 function loadFile(url: string, callback: (error: Error | null, content?: unknown) => void) {
     if (!PizZipUtils) {
         const error = new DocumentGenerationError(
@@ -42,7 +41,6 @@ function loadFile(url: string, callback: (error: Error | null, content?: unknown
 
     PizZipUtils.getBinaryContent(url, (error: Error | null, content: ArrayBuffer) => {
         if (error) {
-            // Create more specific error based on the nature of the failure
             let errorType = DocumentErrorType.TEMPLATE_LOADING_ERROR;
             let errorMessage = `Failed to load template: ${error.message}`;
             
@@ -81,23 +79,17 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
         const endDate = new Date(date.setDate(0)).toLocaleDateString().replaceAll("/", "-")
         const startDate = new Date(date.setDate(1)).toLocaleDateString().replaceAll("/", "-")
         
-        // Handle MINUTES template differently
         let finalTotal, totalInWords;
         if (template === "MINUTES") {
-            // For MINUTES template, don't round off
             finalTotal = input.total;
-            // Include paisa in words
             totalInWords = convertToWords(finalTotal, "MINUTES");
         } else {
-            // For other templates, use existing logic
             finalTotal = roundOffTotal(Number(input.total));
             totalInWords = convertToWords(finalTotal);
         }
         
-        // Format hours to display in HH.MM format
         const formattedHours = formatHours(input.hours, template)
 
-        // Get session to determine if user is in demo mode
         let isDemo = false;
         try {
             const session = await getSession();
@@ -106,7 +98,6 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
             console.error("Error getting session:", error);
         }
         
-        // Use demo templates for demo users, regular templates for others
         const templatePath = isDemo ? 'res/demo/' : 'res/';
         
         if (template == "START_AND_END")
@@ -124,18 +115,15 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
             }
             
             try {
-                // Cast content to appropriate type for PizZip
                 const zip = new PizZip(content as string | ArrayBuffer);
                 const doc = new Docxtemplater(zip, {
                     linebreaks: true,
                     paragraphLoop: true,
                 });
 
-                // Format meter readings to always show two decimal places
                 const formattedStartReading = input.startReading ? Number(input.startReading).toFixed(2) : '';
                 const formattedEndReading = input.endReading ? Number(input.endReading).toFixed(2) : '';
                 
-                // render the document (replace all occurences of {first_name} by John, {last_name} by Doe, ...)
                 doc.render({
                     contact: companyDetails["contact"],
                     company: branchDetails["company"],
@@ -149,21 +137,17 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
                     monthEnd: endDate,
                     monthStart: startDate,
                     
-                    // Conditional fields based on template
                     ...(template === "MINUTES" ? {
-                        // MINUTES template specific fields
                         minutes: input.hours, // For MINUTES, the hours input is actually minutes
                         consumption: branchDetails["consumption"], // Include consumption for reference
                         cpm: formatCpm(branchDetails["cpm"]), // Format cpm to 3 decimal places
                     } : {
-                        // Other templates
                         start: formattedStartReading,
                         end: formattedEndReading,
                         hours: formattedHours,
                         consumption: branchDetails["consumption"],
                     }),
                     
-                    // Common fields
                     fuelPrice: input.fuelPrice,
                     total: input.total,
                     roundOff: finalTotal,
@@ -178,7 +162,6 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 });
 
-                // Resolve with the blob instead of saving
                 resolve(blob);
             } catch (err) {
                 reject(err);
@@ -187,7 +170,6 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
     });
 };
 
-// Error types for more specific error handling
 export enum DocumentErrorType {
     TEMPLATE_NOT_FOUND = 'TEMPLATE_NOT_FOUND',
     TEMPLATE_LOADING_ERROR = 'TEMPLATE_LOADING_ERROR',
@@ -197,7 +179,6 @@ export enum DocumentErrorType {
     UNKNOWN_ERROR = 'UNKNOWN_ERROR'
 }
 
-// Custom error class for document generation
 export class DocumentGenerationError extends Error {
     type: DocumentErrorType;
     details?: Record<string, unknown>;
@@ -247,10 +228,7 @@ const generateDocument = async (input: IFormValues): Promise<void> => {
             { originalError: errorWithMessage, input }
         );
         
-        // Show a more specific alert message to the user
         alert(errorMessage);
-        
-        // Re-throw the custom error so it can be caught by the caller
         throw documentError;
     }
 }
