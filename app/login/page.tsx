@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,13 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { } = useSession(); // Keep the hook for session initialization
+  const { status } = useSession();
   
-  // We don't need this redirect anymore as it's handled by middleware
-  // and we have a separate login layout
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/");
+    }
+  }, [status, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,8 +37,7 @@ export default function LoginPage() {
         setError("Invalid username or password");
         setIsLoading(false);
       } else {
-        // Simple redirect without setTimeout
-        router.push("/"); // Redirect to home page after successful login
+        router.replace("/");
       }
     } catch (error) {
       setError("An error occurred during sign in");
@@ -61,8 +63,7 @@ export default function LoginPage() {
         setIsLoading(false);
       } else {
         console.log("Demo login successful, redirecting...");
-        // Simple redirect without setTimeout
-        router.push("/"); // Redirect to home page after successful login
+        router.replace("/");
       }
     } catch (error) {
       console.error("Demo login exception:", error);

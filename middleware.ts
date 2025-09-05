@@ -14,7 +14,9 @@ export async function middleware(req: NextRequest) {
   // Handle login page access - redirect to home if already authenticated
   if (pathname.startsWith("/login")) {
     if (session) {
-      return NextResponse.redirect(new URL("/", req.url));
+      const response =  NextResponse.redirect(new URL("/", req.url));
+      response.headers.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
+      return response;
     }
     return NextResponse.next();
   }

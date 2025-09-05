@@ -1,8 +1,20 @@
 "use client";
 
 import '../globals.css';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function LoginLayout({ children }) {
+  const { status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/");
+    }
+  }, [status, router]);
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <header className="app-header sticky top-0 z-50">
