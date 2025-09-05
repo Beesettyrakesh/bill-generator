@@ -87,8 +87,8 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
             finalTotal = roundOffTotal(Number(input.total));
             totalInWords = convertToWords(finalTotal);
         }
-        
-        const formattedHours = formatHours(input.hours, template)
+
+        const formattedHours = template === "START_AND_END" ? input.hours : formatHours(input.hours, template)
 
         let isDemo = false;
         try {
