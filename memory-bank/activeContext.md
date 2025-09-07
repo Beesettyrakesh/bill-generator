@@ -20,7 +20,21 @@ The current focus is on:
 
 ## Recent Changes
 
-1. **User Authentication Implementation and Improvements**:
+1. **Authentication Navigation Improvements**:
+   - Fixed browser history navigation issues with authentication
+   - Added cache control headers to middleware redirects to prevent caching
+   - Updated login page to use router.replace() instead of router.push()
+   - Added client-side authentication checks to redirect authenticated users from login page
+   - Fixed browser back/forward button navigation issues for authenticated users
+
+2. **Calculation and Formatting Improvements**:
+   - Enhanced formatHours.ts to handle START_AND_END template differently
+   - For START_AND_END template: converts decimal hours to hours.minutes format (5.5 -> 05.30)
+   - For other templates: keeps decimal format (5.5 -> 05.50)
+   - Verified calculation logic in calculateTotal.ts is working correctly
+   - Updated generateDocument.ts to handle formatted hours correctly
+
+3. **User Authentication Implementation and Improvements**:
    - Implemented user authentication with NextAuth.js
    - Added demo mode for recruiters to access the application without credentials
    - Created login page with regular and demo login options
@@ -77,15 +91,23 @@ The current focus is on:
 
 ### Short-term Tasks
 
-1. **Further Enhance Error Handling**:
+1. **Implement Bill History Feature**:
+   - Install AWS SDK for DynamoDB
+   - Create DynamoDB table for bill history with TTL for 12-month retention
+   - Implement backend API endpoints for saving and retrieving bills
+   - Create history page UI with month and branch filtering
+   - Integrate with existing document generation flow
+   - Add navigation to the history page
+
+2. **Further Enhance Error Handling**:
    - Add UI components for displaying error states
    - Implement better error recovery mechanisms
 
-2. **Improve Responsive Design**:
+3. **Improve Responsive Design**:
    - Ensure the application works well on mobile devices
    - Optimize table layout for smaller screens
 
-3. **Enhance PDF Support**:
+4. **Enhance PDF Support**:
    - Add preview functionality for generated PDF documents
    - Implement caching for frequently generated documents
    - Explore batch PDF merging to further optimize credit usage
