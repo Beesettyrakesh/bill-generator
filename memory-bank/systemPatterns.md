@@ -14,11 +14,13 @@ The Bill Generator application follows a modern React-based architecture using N
 - Document generation logic
 - Validation rules
 - Authentication logic
+- AWS configuration and DynamoDB operations
 
 ### 3. Data Layer
 - JSON configuration files for branch and company data
 - Context-based state management for document queue
 - Authentication state management with NextAuth.js
+- DynamoDB for bill history storage and retrieval
 
 ## Key Design Patterns
 
@@ -51,15 +53,20 @@ Document generation uses a factory-like approach:
 
 ```
 App
+├── Navigation
+│   ├── Generate Bills (route to /)
+│   └── Bill History (route to /history)
 ├── Table
 │   └── TableRow (multiple instances)
 └── DocumentList
 ```
 
+- `Navigation` component provides navigation between bill generation and history pages
 - `Table` component renders multiple `TableRow` components based on branch data
 - Each `TableRow` handles input, validation, and document generation for a specific branch
 - `DocumentList` displays and manages documents added to the batch queue
 - `DocumentContext` connects `TableRow` and `DocumentList` for state management
+- `HistoryPage` component displays bill history with filtering options
 
 ## Data Flow
 
@@ -76,14 +83,24 @@ App
 3. **Document Generation Flow**:
    - User triggers document generation
    - System retrieves branch and company configuration
-   - Template selection based on branch type
+   - Template selection based on branch type (from branches.json configuration)
    - Document generation with data interpolation
+   - Previous month calculation based on selected date
    - File download or addition to batch queue
+   - Bill data saved to DynamoDB for history tracking with correct template type
 
 4. **Batch Processing Flow**:
    - Documents added to queue via `DocumentContext`
    - `DocumentList` displays queued documents
    - Batch download processes all queued documents
+   - Each bill's data saved to DynamoDB
+
+5. **Bill History Flow**:
+   - User navigates to History page
+   - System fetches available months from DynamoDB
+   - User selects month and optionally branch
+   - System queries DynamoDB for matching bills
+   - Results displayed in table format
 
 ## Critical Implementation Paths
 
@@ -94,12 +111,17 @@ User Input → validateField() → calculateTotal() → getBranchDetails() → U
 
 ### 2. Document Generation Path
 ```
-Generate Button → validateField() → generateDocument() → loadFile() → docxtemplater.render() → saveAs()
+Generate Button → validateField() → generateDocument() → loadFile() → docxtemplater.render() → saveAs() → saveBillData() → DynamoDB
 ```
 
 ### 3. Batch Processing Path
 ```
 Add Button → handleAddDocument() → generateDocumentAsBlob() → addDocument() → DocumentContext → DocumentList
+```
+
+### 4. Bill History Retrieval Path
+```
+Month Selection → fetchBills() → DynamoDB Query → Update UI
 ```
 
 ## State Management
@@ -150,3 +172,7 @@ Login Page → NextAuth.js → JWT Token → Session → Protected Routes
 6. **CSS Modules**: Component-scoped styling to prevent conflicts
 7. **NextAuth.js**: Authentication framework for Next.js applications
 8. **bcrypt**: Secure password hashing for user credentials
+9. **AWS SDK**: Integration with AWS services for data persistence
+10. **DynamoDB**: NoSQL database for bill history storage with TTL support
+11. **Global Secondary Index**: Efficient querying of bills by month
+12. **Expression Attribute Names**: Handling of DynamoDB reserved keywords

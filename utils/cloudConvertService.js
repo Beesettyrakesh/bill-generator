@@ -34,6 +34,7 @@ export async function convertToPdf(docxBlob, filename) {
   }
 }
 
+
 /**
  * Generates a PDF document from form values and saves it
  * @param {Object} input - The form values to use for the document
@@ -43,21 +44,29 @@ export async function convertToPdf(docxBlob, filename) {
  */
 export async function generateAndSavePdf(input, branch, generateDocxBlob) {
   try {
+    // First generate the DOCX blob
     const docxBlob = await generateDocxBlob(input);
     
     try {
+      // Convert to PDF
       const pdfBlob = await convertToPdf(docxBlob, branch);
       
+      // Create a download link
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `${branch}.pdf`;
       
+      // Trigger the download
       document.body.appendChild(link);
       link.click();
       
+      // Clean up
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      
+      // Save bill data to DynamoDB
+      await saveBillData(input);
     } catch (error) {
       console.error('PDF conversion failed, falling back to DOCX');
       // Fallback to DOCX if conversion fails
@@ -71,6 +80,9 @@ export async function generateAndSavePdf(input, branch, generateDocxBlob) {
       
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      
+      // Save bill data to DynamoDB even if PDF conversion fails
+      await saveBillData(input);
     }
   } catch (error) {
     console.error('Document generation failed:', error);
@@ -78,6 +90,37 @@ export async function generateAndSavePdf(input, branch, generateDocxBlob) {
   }
 }
 
+/**
+ * Saves bill data to DynamoDB
+ * @param {Object} formValues - The form values to save
+ * @returns {Promise<void>}
+ */
+async function saveBillData(formValues) {
+  try {
+    // Get current user from session
+    const response = await fetch('/api/auth/session');
+    const session = await response.json();
+    const user = session?.user;
+    
+    // Save bill data to DynamoDB
+    await fetch('/api/bills/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        formValues,
+        user
+      }),
+    });
+    
+    console.log('Bill data saved successfully');
+  } catch (error) {
+    console.error('Failed to save bill data:', error);
+    // Don't throw error here, as we don't want to interrupt the document download
+    // if saving to DynamoDB fails
+  }
+}
 /**
  * Downloads PDF files individually from DOCX blobs
  * @param {Array} documents - Array of document items containing form values and branch names
@@ -111,6 +154,9 @@ export async function downloadPdfFiles(documents, generateDocxBlob) {
           
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
+          
+          // Save bill data to DynamoDB
+          await saveBillData(doc.formValues);
         } catch (error) {
           console.error(`PDF conversion failed for ${doc.branch}, falling back to DOCX`);
           
@@ -125,6 +171,9 @@ export async function downloadPdfFiles(documents, generateDocxBlob) {
           
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
+          
+          // Save bill data to DynamoDB even if PDF conversion fails
+          await saveBillData(doc.formValues);
         }
         
         // Add a small delay between downloads to prevent browser issues

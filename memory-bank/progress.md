@@ -149,15 +149,29 @@ The Bill Generator application is currently in a **functional production state**
 - Proper separation of server and client components
 - Improved browser history navigation with cache control headers
 
+✅ **Bill History Feature**
+
+- AWS DynamoDB integration for bill data storage
+- API endpoints for saving and retrieving bill data
+- History page with month and branch filtering
+- Navigation between bill generation and history pages
+- 12-month data retention with TTL
+- Proper error handling with specific error messages
+- Empty state handling when no bill history exists
+- DynamoDB reserved keyword handling with expression attribute names
+- Correct template type detection from branch configuration
+- Dynamic branch list from configuration file
+- Date-aware previous month calculation
+- Accurate month start/end date calculations
+
 🔲 **Enhanced Authentication**
 
 - User preferences
 - Additional roles and permissions
 
-🔲 **Data Persistence**
+🔲 **Additional Data Persistence**
 
 - Save frequently used values
-- History of generated bills (in progress - DynamoDB implementation)
 - User preferences storage
 
 🔲 **Enhanced Batch Processing**
@@ -209,6 +223,23 @@ None currently identified.
    - Issue: CloudConvert API key needs to be properly set in environment variables
    - Impact: PDF conversion fails if environment variable is missing
    - Planned Fix: Add validation and better error messages for missing environment variables
+
+### Recently Fixed Issues
+
+1. **Template Type in DynamoDB**
+   - Issue: Template type was always being saved as "HOURS" in DynamoDB, even for branches using other templates
+   - Fix: Updated pages/api/bills/save.js to get template type directly from branches.json file
+   - Impact: Correct template type is now saved to DynamoDB for each branch
+
+2. **Branch List in History Page**
+   - Issue: Branches in history page were coming from a static array instead of branches.json file
+   - Fix: Updated app/history/page.tsx to import branches from branches.json
+   - Impact: Branch dropdown in history page now shows all branches from configuration
+
+3. **Previous Month Calculation**
+   - Issue: Previous month was calculated based on today's date instead of selected date
+   - Fix: Updated utils/getPreviousMonth.ts to accept a date parameter and modified utils/generateDocument.ts to pass selected date
+   - Impact: Bills now correctly show the month prior to the selected date
 
 ### Medium Priority
 
@@ -295,7 +326,7 @@ None currently identified.
 
 ### Upcoming Milestones
 
-🔲 **Bill History Feature** - Implement DynamoDB-based bill history storage and retrieval
+✅ **Bill History Feature** - Implemented DynamoDB-based bill history storage and retrieval with proper error handling
 🔲 **Enhanced PDF Features** - PDF preview functionality and optimizations
 🔲 **Mobile Optimization** - Fully responsive design
 🔲 **Data Persistence** - Save and recall functionality
@@ -303,7 +334,18 @@ None currently identified.
 
 ## Lessons Learned
 
-1. **Template-based Document Generation**
+1. **AWS Integration**
+
+   - Success: Implemented DynamoDB for bill history storage
+   - Learning: Proper AWS configuration and error handling are essential
+   - Learning: Using environment variables for AWS credentials improves security
+   - Learning: Global Secondary Indexes in DynamoDB enable efficient querying patterns
+   - Learning: DynamoDB reserved keywords must be handled with expression attribute names
+   - Learning: Honest data display without mock fallbacks improves user experience
+   - Learning: Template type should be determined from configuration, not form fields
+   - Learning: Date-aware calculations are crucial for historical data accuracy
+
+2. **Template-based Document Generation**
 
    - Success: Using Docxtemplater for flexible document generation
    - Learning: Template preparation is critical for consistent output

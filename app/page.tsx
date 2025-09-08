@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Table from "@/components/Table";
 import DocumentList from "@/components/DocumentList";
+import Navigation from "@/components/Navigation";
 import MainLayout from "./main-layout";
 
 export default function Home() {
@@ -28,6 +29,7 @@ export default function Home() {
     return (
       <MainLayout>
         <div className="w-full max-w-[95%] mx-auto py-2 space-y-6">
+          <Navigation />
           <Table />
           <DocumentList />
         </div>

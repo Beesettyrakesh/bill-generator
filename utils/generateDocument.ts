@@ -71,13 +71,19 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
         const companyDetails: ICompanyConfig = getCompanyDetails(branchDetails["company"])
 
         let url;
-        const date = new Date()
-        const currYear = date.getFullYear();
-        const prevMonth = getPreviousMonth()
+        // Use the input date for calculating the previous month
+        const selectedDate = new Date(input.date);
+        const currYear = selectedDate.getFullYear();
+        const prevMonth = getPreviousMonth(input.date);
         const submitDate = convertDate(input.date)
         const template = branchDetails["template"]
-        const endDate = new Date(date.setDate(0)).toLocaleDateString().replaceAll("/", "-")
-        const startDate = new Date(date.setDate(1)).toLocaleDateString().replaceAll("/", "-")
+        // Calculate month start and end dates based on the selected date
+        const monthDate = new Date(selectedDate);
+        monthDate.setMonth(monthDate.getMonth() - 1); // Previous month
+        const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+        
+        const startDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).toLocaleDateString().replaceAll("/", "-");
+        const endDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), lastDay).toLocaleDateString().replaceAll("/", "-");
         
         let finalTotal, totalInWords;
         if (template === "MINUTES") {
