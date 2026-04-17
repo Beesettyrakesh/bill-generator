@@ -5,5 +5,6 @@ export interface IFormValues {
     endReading: string,
     hours: string,
     fuelPrice: string,
-    total: string
+    total: string,
+    [key: string]: unknown
 }

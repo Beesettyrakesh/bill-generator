@@ -1,7 +1,7 @@
 "use client";
 
 import { IBankBranch } from "@/interfaces/IBankBranch";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import generateDocument, {
   generateDocumentAsBlob,
   DocumentErrorType,
@@ -9,7 +9,7 @@ import generateDocument, {
 } from "@/utils/generateDocument";
 import calculateTotal from "@/utils/calculateTotal";
 import { useDocuments } from "@/contexts/DocumentContext";
-import { useFuelPrices } from "@/contexts/FuelPriceContext";
+import { useBranchForm } from "@/contexts/BranchFormContext";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import formatHours from "@/utils/formatHours";
+import { useState } from "react";
+import { useToast } from "@/components/ui/toast";
 
 interface ValidationErrors {
   date?: string;
@@ -38,35 +40,67 @@ interface TableRowProps {
 
 const TableRowComponent = (props: TableRowProps) => {
   const { addDocument } = useDocuments();
-  const { fuelPrices, updateFuelPrice, verifyPersistence } = useFuelPrices();
-  const [branch] = useState(props.branch.name);
-  const [date, setDate] = useState("");
-  const [startReading, setStartReading] = useState("");
-  const [endReading, setEndReading] = useState("");
-  const [hours, setHours] = useState("");
-  const [fuelPrice, setFuelPrice] = useState("");
-  const [total, setTotal] = useState("");
+  const { getFieldValues, updateField, clearAfterGenerate, clearAll } = useBranchForm();
+  const toast = useToast();
+
+  const branchName = props.branch.name;
+  const fields = getFieldValues(branchName);
+
+  const { date, startReading, endReading, hours, fuelPrice } = fields;
+
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+  const [total, setTotal] = useState<string>("");
 
+  // Derive total from hours + fuelPrice (async)
   useEffect(() => {
-    console.log(`TableRow(${branch}): Loading cached fuel price`);
-    const cachedPrice = fuelPrices[branch];
-    if (cachedPrice) {
-      console.log(`TableRow(${branch}): Found cached price: ${cachedPrice}`);
-      setFuelPrice(cachedPrice);
-    } else {
-      console.log(`TableRow(${branch}): No cached price found`);
+    if (!hours || !fuelPrice || !branchName) {
+      setTotal("");
+      return;
     }
+    let cancelled = false;
+    calculateTotal(Number(hours), Number(fuelPrice), branchName)
+      .then((result) => {
+        if (!cancelled) setTotal(result.toFixed(2));
+      })
+      .catch(() => {
+        if (!cancelled) setTotal("");
+      });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hours, fuelPrice, branchName]);
 
-    const isPersistenceWorking = verifyPersistence();
-    console.log(
-      `TableRow(${branch}): Persistence verification: ${
-        isPersistenceWorking ? "OK" : "FAILED"
-      }`
-    );
-  }, [branch, fuelPrices, verifyPersistence]);
+  // Auto-populate startReading from previous bill's endReading for START_AND_END branches
+  useEffect(() => {
+    if (
+      props.branch.template === "START_AND_END" &&
+      !startReading &&
+      endReading
+    ) {
+      updateField(branchName, "startReading", endReading);
+      updateField(branchName, "endReading", "");
+    }
+  // Only run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-calculate hours for START_AND_END when startReading/endReading change
+  useEffect(() => {
+    if (
+      props.branch.template === "START_AND_END" &&
+      startReading &&
+      endReading
+    ) {
+      const start = Number(startReading);
+      const end = Number(endReading);
+      if (!isNaN(start) && !isNaN(end) && end > start) {
+        const calculatedHours = formatHours((end - start).toString(), "START_AND_END");
+        updateField(branchName, "hours", calculatedHours);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startReading, endReading, props.branch.template]);
 
   const handleResetClick = () => {
     if (date || startReading || endReading || hours || fuelPrice) {
@@ -75,11 +109,7 @@ const TableRowComponent = (props: TableRowProps) => {
   };
 
   const confirmReset = () => {
-    setDate("");
-    setStartReading("");
-    setEndReading("");
-    setHours("");
-    setTotal("");
+    clearAll(branchName);
     setErrors({});
     setShowResetConfirmation(false);
   };
@@ -124,38 +154,7 @@ const TableRowComponent = (props: TableRowProps) => {
     }
   };
 
-  useEffect(() => {
-    if (
-      props.branch.template === "START_AND_END" &&
-      startReading &&
-      endReading
-    ) {
-      const start = Number(startReading);
-      const end = Number(endReading);
-
-      if (!isNaN(start) && !isNaN(end) && end > start) {
-        const calculatedHours = (end - start).toString();
-        setHours(formatHours(calculatedHours, "START_AND_END"));
-      }
-    }
-  }, [startReading, endReading, props.branch.template]);
-
-  useEffect(() => {
-    if (hours && fuelPrice && branch) {
-      const billTotal: number = calculateTotal(
-        Number(hours),
-        Number(fuelPrice),
-        branch
-      );
-      setTotal(billTotal.toFixed(2));
-    } else {
-      setTotal("");
-    }
-  }, [hours, fuelPrice, branch]);
-
-  const handleAddDocument = async () => {
-    if (!total) return;
-
+  const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {};
     newErrors.date = validateField("date", date);
     if (props.branch.template === "START_AND_END") {
@@ -170,16 +169,16 @@ const TableRowComponent = (props: TableRowProps) => {
     );
 
     setErrors(filteredErrors);
+    return Object.keys(filteredErrors).length === 0;
+  };
 
-    if (Object.keys(filteredErrors).length > 0) {
-      return;
-    }
+  const handleAddDocument = async () => {
+    if (!total) return;
+    if (!validateForm()) return;
 
     try {
-      console.log("Adding document for branch:", branch);
-
       const formValues = {
-        branch,
+        branch: branchName,
         date,
         startReading,
         endReading,
@@ -188,15 +187,12 @@ const TableRowComponent = (props: TableRowProps) => {
         total,
       };
 
-      console.log("Form values:", formValues);
-
-      // Generate document blob
       const docBlob = await generateDocumentAsBlob(formValues);
-      console.log("Document blob generated:", docBlob);
-
-      // Add to document list
-      addDocument({ branch, formValues, docxBlob: docBlob });
-      console.log("Document added to list");
+      addDocument({ branch: branchName, formValues, docxBlob: docBlob });
+      toast({
+        title: "Added to queue",
+        description: `${branchName} has been added to the download queue.`,
+      });
     } catch (error) {
       console.error("Error adding document:", error);
 
@@ -224,30 +220,13 @@ const TableRowComponent = (props: TableRowProps) => {
   };
 
   const validateAndGenerateDocument = async () => {
-    const newErrors: ValidationErrors = {};
-    newErrors.date = validateField("date", date);
-    if (props.branch.template === "START_AND_END") {
-      newErrors.startReading = validateField("startReading", startReading);
-      newErrors.endReading = validateField("endReading", endReading);
-    }
-    newErrors.hours = validateField("hours", hours);
-    newErrors.fuelPrice = validateField("fuelPrice", fuelPrice);
-
-    const filteredErrors = Object.fromEntries(
-      Object.entries(newErrors).filter(([, value]) => value !== undefined)
-    );
-
-    setErrors(filteredErrors);
-
-    if (Object.keys(filteredErrors).length > 0) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsGenerating(true);
 
     try {
       await generateDocument({
-        branch,
+        branch: branchName,
         date,
         startReading,
         endReading,
@@ -255,13 +234,14 @@ const TableRowComponent = (props: TableRowProps) => {
         fuelPrice,
         total,
       });
+
+      // Clear fields after successful generation — keep endReading and fuelPrice
+      clearAfterGenerate(branchName);
+      setErrors({});
     } catch (error) {
       console.error("Error generating document:", error);
 
-      // Handle specific error types
       if (error instanceof DocumentGenerationError) {
-        // Error is already handled in generateDocument with specific messages
-        // We could add additional UI feedback here if needed
         switch (error.type) {
           case DocumentErrorType.TEMPLATE_NOT_FOUND:
             console.error("Template error:", error.message);
@@ -294,10 +274,12 @@ const TableRowComponent = (props: TableRowProps) => {
       <TableCell data-label="Date">
         <div className="relative">
           <Input
+            id={`date-${branchName}`}
+            name={`date-${branchName}`}
             type="date"
             value={date}
-            onChange={(event) => setDate(event.target.value)}
-            className={cn("text-base", errors.date && "border-destructive")}
+            onChange={(e) => updateField(branchName, "date", e.target.value)}
+            className={cn("text-base w-full px-2", errors.date && "border-destructive")}
           />
           {errors.date && (
             <div className="text-xs text-destructive mt-1">{errors.date}</div>
@@ -310,12 +292,14 @@ const TableRowComponent = (props: TableRowProps) => {
           <TableCell data-label="Start Reading">
             <div className="relative">
               <Input
+                id={`startReading-${branchName}`}
+                name={`startReading-${branchName}`}
                 type="text"
                 placeholder="Start reading"
                 value={startReading}
-                onChange={(event) => setStartReading(event.target.value)}
+                onChange={(e) => updateField(branchName, "startReading", e.target.value)}
                 className={cn(
-                  "text-base",
+                  "text-base w-full",
                   errors.startReading && "border-destructive"
                 )}
               />
@@ -329,12 +313,14 @@ const TableRowComponent = (props: TableRowProps) => {
           <TableCell data-label="End Reading">
             <div className="relative">
               <Input
+                id={`endReading-${branchName}`}
+                name={`endReading-${branchName}`}
                 type="text"
                 placeholder="End reading"
                 value={endReading}
-                onChange={(event) => setEndReading(event.target.value)}
+                onChange={(e) => updateField(branchName, "endReading", e.target.value)}
                 className={cn(
-                  "text-base",
+                  "text-base w-full",
                   errors.endReading && "border-destructive"
                 )}
               />
@@ -358,12 +344,14 @@ const TableRowComponent = (props: TableRowProps) => {
       >
         <div className="relative">
           <Input
+            id={`hours-${branchName}`}
+            name={`hours-${branchName}`}
             type="text"
             placeholder={
               props.branch.template === "MINUTES" ? "Minutes" : "Hours"
             }
             value={hours}
-            onChange={(event) => setHours(event.target.value)}
+            onChange={(e) => updateField(branchName, "hours", e.target.value)}
             className={cn("text-base", errors.hours && "border-destructive")}
           />
           {errors.hours && (
@@ -375,22 +363,12 @@ const TableRowComponent = (props: TableRowProps) => {
       <TableCell data-label="Fuel Price">
         <div className="relative">
           <Input
+            id={`fuelPrice-${branchName}`}
+            name={`fuelPrice-${branchName}`}
             type="text"
             placeholder="Fuel price"
             value={fuelPrice}
-            onChange={(event) => {
-              const newPrice = event.target.value;
-              setFuelPrice(newPrice);
-
-              // Update the global fuel price if it's valid
-              if (
-                newPrice &&
-                !isNaN(Number(newPrice)) &&
-                Number(newPrice) > 0
-              ) {
-                updateFuelPrice(branch, newPrice);
-              }
-            }}
+            onChange={(e) => updateField(branchName, "fuelPrice", e.target.value)}
             className={cn(
               "text-base",
               errors.fuelPrice && "border-destructive"
@@ -432,7 +410,7 @@ const TableRowComponent = (props: TableRowProps) => {
         </Button>
       </TableCell>
 
-      <TableCell data-label="Reset">
+      <TableCell data-label="Reset" className="pr-4">
         <Button
           variant="outline"
           size="sm"
