@@ -1,79 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import '../css/responsive.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Blue-toned color palette */
-    --background: 210 20% 94%; /* #F1F6F9 - very light blue-gray */
-    --foreground: 220 60% 19%; /* #14274E - dark navy blue */
+    /* Zinc + Violet-600 palette */
+    --background: 0 0% 98%;          /* zinc-50 #FAFAFA */
+    --foreground: 240 5% 10%;        /* zinc-900 #18181B */
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 60% 19%; /* #14274E - dark navy blue */
+    --card: 0 0% 100%;               /* white */
+    --card-foreground: 240 5% 10%;   /* zinc-900 */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 60% 19%; /* #14274E - dark navy blue */
+    --popover-foreground: 240 5% 10%;
 
-    --primary: 220 60% 19%; /* #14274E - dark navy blue */
+    --primary: 263 70% 50%;          /* violet-600 #7C3AED */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 30% 31%; /* #394867 - medium blue-gray */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;         /* zinc-100 */
+    --secondary-foreground: 240 5% 26%; /* zinc-700 */
 
-    --muted: 220 15% 66%; /* #9BA4B4 - light blue-gray */
-    --muted-foreground: 220 60% 19%; /* #14274E - dark navy blue */
+    --muted: 240 5% 96%;             /* zinc-100 */
+    --muted-foreground: 240 4% 38%;  /* zinc-600 — bumped for elderly/low-vision contrast */
 
-    --accent: 220 30% 31%; /* #394867 - medium blue-gray */
-    --accent-foreground: 0 0% 100%;
+    --accent: 263 100% 97%;          /* violet-50 */
+    --accent-foreground: 263 70% 50%; /* violet-600 */
 
-    --destructive: 0 70% 40%;
+    --destructive: 0 72% 51%;        /* red-600 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 66%; /* #9BA4B4 - light blue-gray */
-    --input: 210 20% 94%; /* #F1F6F9 - very light blue-gray */
-    --ring: 220 60% 19%; /* #14274E - dark navy blue */
+    --border: 240 6% 90%;            /* zinc-200 */
+    --input: 240 6% 90%;             /* zinc-200 */
+    --ring: 263 70% 50%;             /* violet-600 */
 
-    --radius: 0.375rem;
-
-    /* Legacy variables */
-    --primary-color: hsl(220, 60%, 19%); /* #14274E */
-    --secondary-color: hsl(220, 30%, 31%); /* #394867 */
-    --danger-color: hsl(0, 70%, 40%);
-    --text-color: hsl(220, 60%, 19%); /* #14274E */
-    --light-bg: hsl(210, 20%, 94%); /* #F1F6F9 */
-    --border-color: hsl(220, 15%, 66%); /* #9BA4B4 */
-    --header-bg: hsl(220, 60%, 19%); /* #14274E */
-    --footer-bg: hsl(220, 15%, 66%); /* #9BA4B4 */
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 220 40% 10%;
-    --foreground: 220 15% 90%;
+    --background: 240 10% 8%;
+    --foreground: 240 5% 92%;
 
-    --card: 220 40% 12%;
-    --card-foreground: 220 15% 90%;
+    --card: 240 10% 11%;
+    --card-foreground: 240 5% 92%;
 
-    --popover: 220 40% 12%;
-    --popover-foreground: 220 15% 90%;
+    --popover: 240 10% 11%;
+    --popover-foreground: 240 5% 92%;
 
-    --primary: 215 85% 30%;
-    --primary-foreground: 220 15% 90%;
+    --primary: 263 70% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 150 40% 30%;
-    --secondary-foreground: 220 15% 90%;
+    --secondary: 240 8% 16%;
+    --secondary-foreground: 240 5% 75%;
 
-    --muted: 220 30% 20%;
-    --muted-foreground: 220 15% 70%;
+    --muted: 240 8% 16%;
+    --muted-foreground: 240 5% 55%;
 
-    --accent: 220 30% 20%;
-    --accent-foreground: 220 15% 90%;
+    --accent: 263 40% 18%;
+    --accent-foreground: 263 70% 75%;
 
-    --destructive: 0 70% 40%;
-    --destructive-foreground: 220 15% 90%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 30% 20%;
-    --input: 220 30% 20%;
-    --ring: 220 15% 80%;
+    --border: 240 8% 18%;
+    --input: 240 8% 18%;
+    --ring: 263 70% 60%;
   }
 }
 
@@ -83,16 +76,14 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: 'Arial', sans-serif;
-    font-size: 1.05rem; /* Slightly larger base font size */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.9375rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     @apply font-semibold tracking-tight;
-  }
-  button, input, select, textarea {
-    font-family: 'Arial', sans-serif;
   }
 }
 
@@ -102,29 +93,4 @@ body {
   flex-direction: column;
   margin: 0;
   padding: 0;
-  overflow-y: auto;
-}
-
-/* Header Styles */
-.app-header {
-  @apply bg-primary text-primary-foreground py-4 px-8 text-center shadow-md w-full;
-}
-
-.app-header h1 {
-  @apply text-3xl font-bold mb-2;
-}
-
-.app-subtitle {
-  @apply text-base opacity-90;
-}
-
-/* Main Content Area */
-.app-main {
-  @apply flex-1 p-4 md:px-8 pt-2 pb-8 max-w-[98%] mx-auto w-full flex flex-col;
-  min-height: calc(100vh - 140px); /* Adjust based on header and footer height */
-}
-
-/* Footer Styles */
-.app-footer {
-  @apply bg-muted py-4 text-center text-sm border-t border-border;
 }
