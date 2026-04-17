@@ -50,12 +50,12 @@ describe('convertToWords', () => {
 
 describe('stringify', () => {
     it('should convert to 75', () => {
-        expect(stringify(75, "HUNDRED")).toBe("SEVENTY FIVE HUNDRED")
-        expect(stringify(75)).toBe("SEVENTY FIVE")
+        expect(stringify(75, "Hundred")).toBe("Seventy Five Hundred")
+        expect(stringify(75)).toBe("Seventy Five")
     });
 
     it('should convert to 0 and hundred', () => {
-        expect(stringify(0, "HUNDRED")).toBe("")
+        expect(stringify(0, "Hundred")).toBe("")
     });
 
     it('should convert to 0 units', () => {
@@ -63,12 +63,12 @@ describe('stringify', () => {
     });
 
     it('should convert to 11', () => {
-        expect(stringify(11, "THOUSAND")).toBe("ELEVEN THOUSAND")
-        expect(stringify(11)).toBe("ELEVEN")
-        expect(stringify(11, "")).toBe("ELEVEN")
+        expect(stringify(11, "Thousand")).toBe("Eleven Thousand")
+        expect(stringify(11)).toBe("Eleven")
+        expect(stringify(11, "")).toBe("Eleven")
     });
 
     it('should convert to 20', () => {
-        expect(stringify(20, "THOUSAND")).toBe("TWENTY THOUSAND")
+        expect(stringify(20, "Thousand")).toBe("Twenty Thousand")
     });
 })

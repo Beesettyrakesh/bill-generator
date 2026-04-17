@@ -6,37 +6,37 @@ import { useEffect } from "react";
 import Table from "@/components/Table";
 import DocumentList from "@/components/DocumentList";
 import Navigation from "@/components/Navigation";
-import MainLayout from "./main-layout";
+import ClientLayout from "./client-layout";
 
 export default function Home() {
   const { status } = useSession();
   const router = useRouter();
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
   }, [status, router]);
 
-  // Show loading state while checking authentication
   if (status === "loading") {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
   }
 
-  // Only render content when authenticated
   if (status === "authenticated") {
     return (
-      <MainLayout>
-        <div className="w-full max-w-[95%] mx-auto py-2 space-y-6">
+      <ClientLayout>
+        <div className="space-y-6">
           <Navigation />
           <Table />
           <DocumentList />
         </div>
-      </MainLayout>
+      </ClientLayout>
     );
   }
 
-  // Return empty div while redirecting
-  return <div></div>;
+  return null;
 }

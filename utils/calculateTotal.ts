@@ -1,31 +1,31 @@
-import {IBranchConfig} from "@/interfaces/IBranchConfig";
-import getBranchDetails from "@/utils/getBranchDetails";
+import { IBranchConfig } from "@/interfaces/IBranchConfig";
+import { getBranchDetailsAsync } from "@/utils/getBranchDetails";
 
-const calculateTotal = (hours: number, fuelPrice: number, branch: string): number => {
+const calculateTotal = async (hours: number, fuelPrice: number, branch: string): Promise<number> => {
 
-    const branchDetails: IBranchConfig = getBranchDetails(branch)
-    const template = branchDetails["template"]
+    const branchDetails: IBranchConfig = await getBranchDetailsAsync(branch);
+    const template = branchDetails["template"];
 
-    if(template === "MINUTES") {
-        const cpm: number = branchDetails["cpm"] || 0
-        const minutes: number = Number(hours)
-        return minutes * cpm * fuelPrice
+    if (template === "MINUTES") {
+        const cpm: number = branchDetails["cpm"] || 0;
+        const minutes: number = Number(hours);
+        return minutes * cpm * fuelPrice;
     }
 
-    const consumption: number = branchDetails["consumption"]
+    const consumption: number = branchDetails["consumption"];
 
     // if(template === "START_AND_END") {
     //     return hours * consumption * fuelPrice
     // }
 
-    const decimalsMap:Map<number, number> = new Map<number, number>()
-    decimalsMap.set(15, 0.25)
-    decimalsMap.set(30, 0.50)
-    decimalsMap.set(45, 0.75)
+    const decimalsMap: Map<number, number> = new Map<number, number>();
+    decimalsMap.set(15, 0.25);
+    decimalsMap.set(30, 0.50);
+    decimalsMap.set(45, 0.75);
 
-    const decimal =  Math.floor((hours * 100) % 100)
-    const modifiedHours = Math.floor(hours) + (decimalsMap.get(decimal) || 0)
-    return  modifiedHours * consumption * fuelPrice
-}
+    const decimal = Math.floor((hours * 100) % 100);
+    const modifiedHours = Math.floor(hours) + (decimalsMap.get(decimal) || 0);
+    return modifiedHours * consumption * fuelPrice;
+};
 
 export default calculateTotal;

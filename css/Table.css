@@ -27,7 +27,7 @@
 
 .bank-table-header th {
   padding: 16px 12px;
-  text-align: center; /* Center align all header text */
+  text-align: center;
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -55,6 +55,30 @@
   border-bottom: 1px solid #e0e0e0;
   color: #333;
   font-size: 0.95rem;
+}
+
+/* ── Dark Mode ── */
+.dark .table-container {
+  background: hsl(240 10% 11%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dark .bank-table-header {
+  background: #0f1a30;
+}
+
+.dark .banks-table tbody tr:nth-child(even) {
+  background-color: hsl(240 10% 13%);
+}
+
+.dark .banks-table tbody tr:hover {
+  background-color: hsl(240 8% 20%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .banks-table td {
+  border-bottom: 1px solid hsl(240 8% 18%);
+  color: hsl(240 5% 85%);
 }
 
 /* Responsive Design */

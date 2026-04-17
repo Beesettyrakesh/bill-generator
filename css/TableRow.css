@@ -9,7 +9,7 @@
 
 /* Cell Styles - Added consistent padding */
 .bank-row td {
-  padding: 12px 10px; /* Uniform padding */
+  padding: 12px 10px;
   vertical-align: middle;
 }
 
@@ -23,12 +23,14 @@
 .table-input {
   width: 100%;
   padding: 8px 12px;
-  margin: 4px 0; /* Adds vertical spacing between inputs */
+  margin: 4px 0;
   border: 1px solid #ddd;
   border-radius: 4px;
+  background-color: #ffffff;
+  color: #333;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   transition: all 0.2s;
-  box-sizing: border-box; /* Ensures padding doesn't affect width */
+  box-sizing: border-box;
 }
 
 /* Error state for input fields */
@@ -55,7 +57,7 @@
 /* Action Buttons */
 .action-button {
   padding: 8px 12px;
-  margin: 4px 0; /* Consistent with input spacing */
+  margin: 4px 0;
   width: 100%;
   box-sizing: border-box;
   border: none;
@@ -108,6 +110,34 @@
 .reset-button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
+}
+
+/* ── Dark Mode ── */
+.dark .bank-row:hover {
+  background-color: hsl(240 8% 20%) !important;
+}
+
+.dark .table-input {
+  background-color: hsl(240 10% 14%);
+  border-color: hsl(240 8% 22%);
+  color: hsl(240 5% 85%);
+}
+
+.dark .table-input:focus {
+  border-color: hsl(263 70% 60%);
+  box-shadow: 0 0 0 2px hsla(263, 70%, 60%, 0.25);
+}
+
+.dark .table-input.input-error {
+  border-color: #f44336;
+  background-color: hsl(0 50% 12%);
+}
+
+.dark .generate-button:disabled,
+.dark .add-button:disabled,
+.dark .reset-button:disabled {
+  background-color: hsl(240 8% 25%);
+  color: hsl(240 5% 55%);
 }
 
 /* Responsive Adjustments */

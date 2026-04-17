@@ -36,11 +36,17 @@
   
   .mobile-card-view tbody tr {
     display: block;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
     border: 1px solid var(--border);
-    border-radius: 0.375rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    padding: 1rem 1.25rem;
+  }
+
+  /* Add outer padding so first/last cards don't touch the wrapper edge */
+  .mobile-card-view tbody {
+    display: block;
+    padding: 0.75rem 0.75rem 0;
   }
   
   .mobile-card-view td {
@@ -99,5 +105,23 @@
   .mobile-card-view select {
     width: 100%;
     max-width: 100%;
+  }
+}
+
+/* ── Dark Mode — mobile card overrides ── */
+@media (max-width: 640px) {
+  .dark .mobile-card-view tbody tr {
+    background-color: hsl(240 10% 11%);
+    border-color: hsl(240 8% 18%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  .dark .mobile-card-view td {
+    border-bottom-color: hsl(240 8% 18%);
+    color: hsl(240 5% 85%);
+  }
+
+  .dark .mobile-card-view td::before {
+    color: hsl(240 5% 55%);
   }
 }

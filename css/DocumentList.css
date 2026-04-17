@@ -87,3 +87,23 @@
   color: #666;
   font-style: italic;
 }
+
+/* ── Dark Mode ── */
+.dark .document-list-container {
+  border-color: hsl(240 8% 18%);
+}
+
+.dark .document-item {
+  background-color: hsl(240 10% 16%);
+  color: hsl(240 5% 85%);
+}
+
+.dark .no-documents {
+  color: hsl(240 5% 55%);
+}
+
+.dark .merge-button:disabled,
+.dark .clear-button:disabled {
+  background-color: hsl(240 8% 25%);
+  color: hsl(240 5% 55%);
+}

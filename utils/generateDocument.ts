@@ -18,7 +18,6 @@ import formatCpm from "@/utils/formatCpm";
 import { generateAndSavePdf } from "@/utils/cloudConvertService";
 import { getSession } from "next-auth/react";
 
-// Define a variable for PizZipUtils
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let PizZipUtils: any = null;
 
@@ -67,8 +66,8 @@ function loadFile(url: string, callback: (error: Error | null, content?: unknown
 // Function that returns a blob instead of downloading
 export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
     return new Promise(async (resolve, reject) => {
-        const branchDetails: IBranchConfig = getBranchDetails(input.branch)
-        const companyDetails: ICompanyConfig = getCompanyDetails(branchDetails["company"])
+        const branchDetails: IBranchConfig = await getBranchDetails(input.branch)
+        const companyDetails: ICompanyConfig = await getCompanyDetails(branchDetails["company"])
 
         let url;
         // Use the input date for calculating the previous month

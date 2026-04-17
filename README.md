@@ -45,10 +45,11 @@ The Bill Generator application automates and standardizes the billing process fo
    npm install
    ```
 
-3. Create a `.env.local` file in the root directory with your CloudConvert API key:
+3. Create your local environment file by copying the provided example and filling in the values:
+   ```bash
+   cp .env.example .env.local
    ```
-   CLOUDCONVERT_API_KEY=your_api_key_here
-   ```
+   The example documents every required variable — NextAuth, MongoDB, AWS (DynamoDB), and CloudConvert. `.env.local` is gitignored and must never be committed.
 
 4. Start the development server:
    ```bash
