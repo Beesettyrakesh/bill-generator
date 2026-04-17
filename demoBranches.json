@@ -1,20 +1,20 @@
 [
   {
     "id": 1,
-    "name": "Demo Branch 1",
+    "name": "Mumbai",
     "template": "START_AND_END",
-    "company": "DEMO COMPANY"
+    "company": "ABC Private Limited"
   },
   {
     "id": 2,
-    "name": "Demo Branch 2",
+    "name": "Hyderabad",
     "template": "MINUTES",
-    "company": "DEMO COMPANY"
+    "company": "ABC Private Limited"
   },
   {
     "id": 3,
-    "name": "Demo Branch 3",
+    "name": "Bengaluru",
     "template": "HOURS",
-    "company": "DEMO COMPANY"
+    "company": "Rya Limited"
   }
 ]

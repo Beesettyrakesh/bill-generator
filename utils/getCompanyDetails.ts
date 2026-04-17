@@ -1,8 +1,7 @@
 "use client";
 
-import {ICompanyConfig} from "@/interfaces/ICompanyConfig";
-import {companyConfig} from "@/config/companyConfig";
-import {demoCompanyConfig} from "@/config/demoCompanyConfig";
+import { ICompanyConfig } from "@/interfaces/ICompanyConfig";
+import { demoCompanyConfig } from "@/config/demoCompanyConfig";
 import { getSession } from "next-auth/react";
 
 class CompanyNotFoundError extends Error {
@@ -19,43 +18,35 @@ const getUserRole = async (): Promise<string> => {
     return session?.user?.role || "family";
   } catch (error) {
     console.error("Error getting session:", error);
-    return "family"; // Default to family role if there's an error
+    return "family";
   }
 };
 
 // Async version for server components and API routes
 export const getCompanyDetailsAsync = async (company: string): Promise<ICompanyConfig> => {
   const userRole = await getUserRole();
-  
-  // Use demo config for demo users
-  const config = userRole === "demo" ? demoCompanyConfig : companyConfig;
-  
-  const companyData = config[company as keyof typeof config];
-  
-  if (!companyData) {
-    throw new CompanyNotFoundError(company);
-  }
-  
-  return companyData;
-};
 
-// Synchronous version for client components that can't use async/await
-const getCompanyDetails = (company: string): ICompanyConfig => {
-  // For client components, we can't determine the role synchronously
-  // So we'll use the regular company config by default
-  // The role-based config will be handled by the server components
-  const companyData = companyConfig[company as keyof typeof companyConfig];
-  
-  if (!companyData) {
-    // Try demo config as fallback
+  // Use local demo config for demo users
+  if (userRole === "demo") {
     const demoCompanyData = demoCompanyConfig[company as keyof typeof demoCompanyConfig];
-    if (demoCompanyData) {
-      return demoCompanyData;
+    if (!demoCompanyData) {
+      throw new CompanyNotFoundError(company);
     }
+    return demoCompanyData;
+  }
+
+  // Fetch from DynamoDB via API for real users
+  const response = await fetch(`/api/config/company?name=${encodeURIComponent(company)}`);
+
+  if (response.status === 404) {
     throw new CompanyNotFoundError(company);
   }
-  
-  return companyData;
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch company details for "${company}"`);
+  }
+
+  return response.json() as Promise<ICompanyConfig>;
 };
 
-export default getCompanyDetails;
+export default getCompanyDetailsAsync;

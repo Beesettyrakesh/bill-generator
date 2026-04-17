@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import MainLayout from '../main-layout';
+import ClientLayout from '../client-layout';
 import Navigation from '@/components/Navigation';
-import branchesData from '../../branches.json';
 
 interface BillFormValues {
   branch: string;
@@ -28,19 +26,29 @@ interface Bill {
   formValues: BillFormValues;
 }
 
-const branches = branchesData.map(branch => branch.name);
-
 export default function HistoryPage() {
-  // Keep useSession for authentication protection
   useSession({ required: true });
   const [months, setMonths] = useState<string[]>([]);
+  const [branches, setBranches] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [bills, setBills] = useState<Bill[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Fetch available months from API
+
+  useEffect(() => {
+    async function fetchBranches() {
+      try {
+        const res = await fetch('/api/config/branches');
+        const data: { name: string }[] = await res.json();
+        setBranches(data.map((b) => b.name));
+      } catch {
+        setBranches([]);
+      }
+    }
+    fetchBranches();
+  }, []);
+
   useEffect(() => {
     async function fetchMonths() {
       setIsLoading(true);
@@ -50,18 +58,14 @@ export default function HistoryPage() {
         if (response.ok) {
           const data = await response.json();
           setMonths(data);
-          if (data.length > 0) {
-            setSelectedMonth(data[0]);
-          }
+          if (data.length > 0) setSelectedMonth(data[0]);
         } else {
           const errorData = await response.json();
-          console.error('Failed to fetch months:', errorData.error || response.statusText);
           setError(errorData.error || 'Failed to fetch months');
           setMonths([]);
           setSelectedMonth('');
         }
-      } catch (error) {
-        console.error('Error fetching months:', error);
+      } catch {
         setError('Failed to connect to the server');
         setMonths([]);
         setSelectedMonth('');
@@ -69,168 +73,134 @@ export default function HistoryPage() {
         setIsLoading(false);
       }
     }
-    
     fetchMonths();
   }, []);
-  
-  // Fetch bills when month or branch selection changes
+
   useEffect(() => {
     async function fetchBills() {
-      if (!selectedMonth) {
-        setBills([]);
-        return;
-      }
-      
+      if (!selectedMonth) { setBills([]); return; }
       setIsLoading(true);
       setError(null);
       try {
         const url = selectedBranch && selectedBranch !== 'all'
           ? `/api/bills/by-month?month=${selectedMonth}&branchId=${selectedBranch}`
           : `/api/bills/by-month?month=${selectedMonth}`;
-          
         const response = await fetch(url);
         if (response.ok) {
-          const data = await response.json();
-          setBills(data);
+          setBills(await response.json());
         } else {
           const errorData = await response.json();
-          console.error('Failed to fetch bills:', errorData.error || response.statusText);
           setError(errorData.error || 'Failed to fetch bills');
           setBills([]);
         }
-      } catch (error) {
-        console.error('Error fetching bills:', error);
+      } catch {
         setError('Failed to connect to the server');
         setBills([]);
       } finally {
         setIsLoading(false);
       }
     }
-    
     fetchBills();
   }, [selectedMonth, selectedBranch]);
-  
-  // Format date for display
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString();
-  };
-  
-  // Format month for display
-  const formatMonth = (monthString: string): string => {
-    if (!monthString) return '';
-    const year = monthString.substring(0, 4);
-    const month = monthString.substring(4, 6);
-    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const formatMonth = (m: string) => {
+    if (!m) return '';
+    const date = new Date(parseInt(m.slice(0, 4)), parseInt(m.slice(4, 6)) - 1, 1);
     return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
   };
-  
-  // Render empty state when no months are available
-  if (!isLoading && months.length === 0) {
-    return (
-      <MainLayout>
-        <div className="w-full max-w-[95%] mx-auto py-2 space-y-6">
-          <Navigation />
-          <Card>
-            <CardHeader>
-              <CardTitle>Bill History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                {error ? (
-                  <div className="text-red-500">{error}</div>
-                ) : (
-                  <div>
-                    <p className="mb-2">No bill history found.</p>
-                    <p>Generate some bills to see them here.</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </MainLayout>
-    );
-  }
-  
+
   return (
-    <MainLayout>
-      <div className="w-full max-w-[95%] mx-auto py-2 space-y-6">
+    <ClientLayout>
+      <div className="space-y-6">
         <Navigation />
-        <Card>
-          <CardHeader>
-            <CardTitle>Bill History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <div className="text-red-500 mb-4">{error}</div>
-            )}
-            
-            <div className="flex flex-wrap gap-4 mb-6">
-              <div className="w-full md:w-1/3">
-                <label className="text-sm font-medium mb-1 block">Month</label>
-                <Select value={selectedMonth} onValueChange={setSelectedMonth} disabled={isLoading || months.length === 0}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map(month => (
-                      <SelectItem key={month} value={month}>
-                        {formatMonth(month)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="w-full md:w-1/3">
-                <label className="text-sm font-medium mb-1 block">Branch (Optional)</label>
-                <Select value={selectedBranch} onValueChange={setSelectedBranch} disabled={isLoading || months.length === 0}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All branches" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All branches</SelectItem>
-                    {branches.map(branch => (
-                      <SelectItem key={branch} value={branch}>{branch}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+
+        {/* Page title */}
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Bill History</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">View and filter previously generated bills</p>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4">
+          <div className="w-full sm:w-56">
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Month</label>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth} disabled={isLoading || months.length === 0}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Select month" />
+              </SelectTrigger>
+              <SelectContent>
+                {months.map((month) => (
+                  <SelectItem key={month} value={month}>{formatMonth(month)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-full sm:w-56">
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Branch</label>
+            <Select value={selectedBranch} onValueChange={setSelectedBranch} disabled={isLoading || months.length === 0}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="All branches" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All branches</SelectItem>
+                {branches.map((branch) => (
+                  <SelectItem key={branch} value={branch}>{branch}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>
+        )}
+
+        {/* Table */}
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">
+              Loading…
             </div>
-            
-            {isLoading ? (
-              <div className="text-center py-8">Loading...</div>
-            ) : bills.length === 0 ? (
-              <div className="text-center py-8">No bills found for the selected criteria.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Branch</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Hours/Minutes</TableHead>
-                      <TableHead>Fuel Price</TableHead>
-                      <TableHead>Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {bills.map(bill => (
-                      <TableRow key={bill.billId}>
-                        <TableCell>{bill.branchId}</TableCell>
-                        <TableCell>{formatDate(bill.formValues.date)}</TableCell>
-                        <TableCell>{bill.formValues.hours}</TableCell>
-                        <TableCell>₹{bill.formValues.fuelPrice}</TableCell>
-                        <TableCell>₹{bill.formValues.total}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          ) : months.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <p className="text-sm font-medium text-foreground">No bill history yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">Generate some bills and they&apos;ll appear here.</p>
+            </div>
+          ) : bills.length === 0 ? (
+            <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">
+              No bills found for the selected criteria.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/60 hover:bg-muted/60">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Branch</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hours / Min</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fuel Price</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bills.map((bill) => (
+                  <TableRow key={bill.billId} className="hover:bg-muted/30">
+                    <TableCell className="font-medium text-sm">{bill.branchId}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{formatDate(bill.formValues.date)}</TableCell>
+                    <TableCell className="text-sm">{bill.formValues.hours}</TableCell>
+                    <TableCell className="text-sm">₹{bill.formValues.fuelPrice}</TableCell>
+                    <TableCell className="text-sm font-semibold text-primary">₹{bill.formValues.total}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
       </div>
-    </MainLayout>
+    </ClientLayout>
   );
 }
