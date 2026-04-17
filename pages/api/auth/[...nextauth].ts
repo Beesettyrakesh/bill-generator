@@ -1,10 +1,14 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
 import clientPromise from "../../../lib/mongodb";
 import { compare } from "bcryptjs";
 
-export const authOptions = {
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET environment variable is not set. Please add it to your .env.local file.");
+}
+
+export const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
     CredentialsProvider({
@@ -17,43 +21,35 @@ export const authOptions = {
         if (!credentials?.username || !credentials?.password) {
           return null;
         }
-        
+
         const client = await clientPromise;
         const db = client.db("bill-generator");
-        const user = await db.collection("users").findOne({ 
-          username: credentials.username 
+        const user = await db.collection("users").findOne({
+          username: credentials.username
         });
-        
+
         if (!user) {
-          console.log("User not found:", credentials.username);
           return null;
         }
-        
-        // Special handling for demo user
-        if (credentials.username === "demo") {
-          console.log("Demo login attempt");
-        }
-        
+
         // Compare password
-        const isValid = await compare(credentials.password, user.password);
-        
+        const isValid = await compare(credentials.password, user.password as string);
+
         if (isValid) {
-          console.log("Login successful for:", credentials.username);
           return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
+            id: user.id as string,
+            name: user.name as string,
+            email: user.email as string,
+            role: user.role as string,
           };
         } else {
-          console.log("Invalid password for:", credentials.username);
           return null;
         }
       }
     })
   ],
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
@@ -63,19 +59,19 @@ export const authOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.role = (user as { role?: string }).role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
       }
       return session;
     }
   },
-  secret: process.env.NEXTAUTH_SECRET || "your-fallback-secret-do-not-use-in-production",
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 export default NextAuth(authOptions);
