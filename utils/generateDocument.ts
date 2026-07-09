@@ -63,11 +63,30 @@ function loadFile(url: string, callback: (error: Error | null, content?: unknown
     });
 }
 
+/**
+ * Optional pre-resolved config supplied by callers that already have it
+ * cached (e.g. from ConfigContext). When provided, generateDocumentAsBlob
+ * skips its internal network fetches for branch/company/session.
+ */
+export interface ResolvedDocConfig {
+    branchDetails: IBranchConfig;
+    companyDetails: ICompanyConfig;
+    isDemo: boolean;
+}
+
 // Function that returns a blob instead of downloading
-export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
+export const generateDocumentAsBlob = (
+    input: IFormValues,
+    resolved?: ResolvedDocConfig,
+): Promise<Blob> => {
     return new Promise(async (resolve, reject) => {
-        const branchDetails: IBranchConfig = await getBranchDetails(input.branch)
-        const companyDetails: ICompanyConfig = await getCompanyDetails(branchDetails["company"])
+        // Use cached config when provided; otherwise fall back to fetching.
+        const branchDetails: IBranchConfig = resolved
+            ? resolved.branchDetails
+            : await getBranchDetails(input.branch)
+        const companyDetails: ICompanyConfig = resolved
+            ? resolved.companyDetails
+            : await getCompanyDetails(branchDetails["company"])
 
         let url;
         // Use the input date for calculating the previous month
@@ -96,11 +115,15 @@ export const generateDocumentAsBlob = (input: IFormValues): Promise<Blob> => {
         const formattedHours = template === "START_AND_END" ? input.hours : formatHours(input.hours, template)
 
         let isDemo = false;
-        try {
-            const session = await getSession();
-            isDemo = session?.user?.role === "demo";
-        } catch (error) {
-            console.error("Error getting session:", error);
+        if (resolved) {
+            isDemo = resolved.isDemo;
+        } else {
+            try {
+                const session = await getSession();
+                isDemo = session?.user?.role === "demo";
+            } catch (error) {
+                console.error("Error getting session:", error);
+            }
         }
         
         const templatePath = isDemo ? 'res/demo/' : 'res/';

@@ -2,6 +2,7 @@
  * Utility functions for converting DOCX to PDF using CloudConvert API
  */
 import type { IFormValues } from '@/interfaces/IFormValues';
+import type { ResolvedDocConfig } from '@/utils/generateDocument';
 import { PDFDocument } from 'pdf-lib';
 
 /**
@@ -100,26 +101,19 @@ export async function generateAndSavePdf(
 }
 
 /**
- * Saves bill data to DynamoDB
+ * Saves bill data to DynamoDB.
+ * The /api/bills/save route resolves the user server-side via getServerSession,
+ * so we no longer fetch /api/auth/session here (removes a redundant round-trip).
  * @param formValues - The form values to save
  */
 async function saveBillData(formValues: Record<string, unknown>): Promise<void> {
   try {
-    // Get current user from session
-    const response = await fetch('/api/auth/session');
-    const session = await response.json() as { user?: unknown };
-    const user = session?.user;
-
-    // Save bill data to DynamoDB
     await fetch('/api/bills/save', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        formValues,
-        user,
-      }),
+      body: JSON.stringify({ formValues }),
     });
   } catch (error) {
     console.error('Failed to save bill data:', error);
@@ -202,10 +196,13 @@ export async function downloadPdfFiles(
  * using pdf-lib, and triggers a single download.
  * @param documents - Array of document items containing form values and branch names
  * @param generateDocxBlob - Function that generates a DOCX blob from form values
+ * @param resolveConfig - Optional resolver returning cached config for a branch,
+ *   so blob generation skips its internal network fetches.
  */
 export async function downloadMergedPdf(
   documents: DocumentItem[],
-  generateDocxBlob: (formValues: IFormValues) => Promise<Blob>
+  generateDocxBlob: (formValues: IFormValues, resolved?: ResolvedDocConfig) => Promise<Blob>,
+  resolveConfig?: (branch: string) => ResolvedDocConfig | undefined
 ): Promise<void> {
   if (documents.length === 0) {
     throw new Error('No documents to download');
@@ -214,7 +211,8 @@ export async function downloadMergedPdf(
   // Step 1: Convert every DOCX to PDF (in parallel for speed)
   const pdfArrayBuffers: ArrayBuffer[] = await Promise.all(
     documents.map(async (doc) => {
-      const docxBlob = await generateDocxBlob(doc.formValues);
+      const resolved = resolveConfig?.(doc.branch);
+      const docxBlob = await generateDocxBlob(doc.formValues, resolved);
       const pdfBlob = await convertToPdf(docxBlob, doc.branch);
       // Save bill data to DB for each document
       await saveBillData(doc.formValues);

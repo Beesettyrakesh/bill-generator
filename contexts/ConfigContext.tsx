@@ -11,6 +11,8 @@ import React, {
 import { useSession } from "next-auth/react";
 import demoBranchData from "../demoBranches.json";
 import { demoBranchConfig } from "@/config/demoBranchConfig";
+import { demoCompanyConfig } from "@/config/demoCompanyConfig";
+import type { ICompanyConfig } from "@/interfaces/ICompanyConfig";
 
 /**
  * Full branch record used across the app.
@@ -32,6 +34,8 @@ interface ConfigContextType {
   branches: BranchRecord[];
   /** Quick lookup: branch name -> BranchRecord. */
   getBranch: (name: string) => BranchRecord | undefined;
+  /** Cached company config lookup (prefetched eagerly). Undefined until ready. */
+  getCompany: (name: string) => ICompanyConfig | undefined;
   /** True while the initial branches fetch is in-flight. */
   isLoading: boolean;
   /** True once branches have been loaded at least once. */
@@ -45,6 +49,7 @@ interface ConfigContextType {
 const ConfigContext = createContext<ConfigContextType>({
   branches: [],
   getBranch: () => undefined,
+  getCompany: () => undefined,
   isLoading: false,
   isReady: false,
   role: "family",
@@ -80,11 +85,41 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const fetchedRef = useRef(false);
+  // company name -> config. Prefetched eagerly so document generation never
+  // needs a network round-trip for company details.
+  const companiesRef = useRef<Map<string, ICompanyConfig>>(new Map());
+
+  // Eagerly prefetch every unique company referenced by the branches, so
+  // getCompany() is instant at document-generation / bulk-download time.
+  const prefetchCompanies = async (branchList: BranchRecord[]) => {
+    const uniqueCompanies = Array.from(
+      new Set(branchList.map((b) => b.company).filter(Boolean))
+    );
+    await Promise.all(
+      uniqueCompanies.map(async (companyName) => {
+        try {
+          const res = await fetch(
+            `/api/config/company?name=${encodeURIComponent(companyName)}`
+          );
+          if (res.ok) {
+            companiesRef.current.set(companyName, (await res.json()) as ICompanyConfig);
+          }
+        } catch {
+          // ignore — getCompany falls back to undefined, callers can refetch
+        }
+      })
+    );
+  };
 
   const load = async () => {
     // Demo users: serve entirely from local config, no network.
     if (isDemo) {
-      setBranches(buildDemoBranches());
+      const demoBranches = buildDemoBranches();
+      setBranches(demoBranches);
+      // Seed the company cache from local demo config.
+      Object.entries(demoCompanyConfig).forEach(([name, cfg]) => {
+        companiesRef.current.set(name, cfg as ICompanyConfig);
+      });
       setIsReady(true);
       return;
     }
@@ -93,7 +128,10 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
     try {
       const res = await fetch("/api/config/branches");
       const data: BranchRecord[] = await res.json();
-      setBranches(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      setBranches(list);
+      // Prefetch companies (eager) once branches are known.
+      await prefetchCompanies(list);
     } catch {
       setBranches([]);
     } finally {
@@ -101,6 +139,7 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
       setIsReady(true);
     }
   };
+
 
   useEffect(() => {
     // Only fetch once authenticated. The provider now lives at the root
@@ -119,6 +158,9 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
   const getBranch = (name: string): BranchRecord | undefined =>
     branches.find((b) => b.name === name);
 
+  const getCompany = (name: string): ICompanyConfig | undefined =>
+    companiesRef.current.get(name);
+
   const refresh = () => {
     fetchedRef.current = false;
     setIsReady(false);
@@ -130,7 +172,7 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <ConfigContext.Provider
-      value={{ branches, getBranch, isLoading, isReady, role, refresh }}
+      value={{ branches, getBranch, getCompany, isLoading, isReady, role, refresh }}
     >
       {children}
     </ConfigContext.Provider>

@@ -20,12 +20,6 @@ interface FormValues {
 
 interface SaveRequestBody {
   formValues: FormValues;
-  user?: {
-    id?: string;
-    sub?: string;
-    name?: string;
-    email?: string;
-  };
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -41,7 +35,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const isDemo = session.user?.role === 'demo';
 
   try {
-    const { formValues, user } = req.body as SaveRequestBody;
+    const { formValues } = req.body as SaveRequestBody;
+    // Resolve the user from the server-side session (no client round-trip).
+    const user = session.user as
+      | { id?: string; sub?: string; name?: string; email?: string }
+      | undefined;
 
     if (!formValues || !formValues.branch || !formValues.date) {
       return res.status(400).json({ error: 'Missing required fields' });

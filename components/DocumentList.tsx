@@ -3,9 +3,11 @@
 import { useDocuments } from '@/contexts/DocumentContext';
 import { useBranchForm } from '@/contexts/BranchFormContext';
 import { useHistory } from '@/contexts/HistoryContext';
+import { useConfig } from '@/contexts/ConfigContext';
 import { useState } from 'react';
 import { downloadMergedPdf } from '@/utils/cloudConvertService';
-import { generateDocumentAsBlob } from '@/utils/generateDocument';
+import { generateDocumentAsBlob, type ResolvedDocConfig } from '@/utils/generateDocument';
+import type { IBranchConfig } from '@/interfaces/IBranchConfig';
 import { Button } from '@/components/ui/button';
 import { X, Download, Trash2 } from 'lucide-react';
 import {
@@ -21,6 +23,7 @@ const DocumentList = () => {
   const { selectedDocuments, removeDocument, clearDocuments } = useDocuments();
   const { clearAfterBulkDownload } = useBranchForm();
   const { invalidate: invalidateHistory } = useHistory();
+  const { getBranch, getCompany, role } = useConfig();
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
@@ -31,7 +34,24 @@ const DocumentList = () => {
     try {
       setIsProcessing(true);
       setDownloadError(null);
-      await downloadMergedPdf(selectedDocuments, generateDocumentAsBlob);
+      // Resolve each branch's config from the ConfigContext cache so blob
+      // generation skips per-document network fetches (branch/company/session).
+      const isDemo = role === 'demo';
+      const resolveConfig = (branch: string): ResolvedDocConfig | undefined => {
+        const b = getBranch(branch);
+        if (!b) return undefined;
+        const company = getCompany(b.company);
+        if (!company) return undefined;
+        const branchDetails: IBranchConfig = {
+          company: b.company,
+          template: b.template,
+          genCapacity: b.genCapacity ?? '',
+          consumption: b.consumption ?? 0,
+          cpm: b.cpm,
+        };
+        return { branchDetails, companyDetails: company, isDemo };
+      };
+      await downloadMergedPdf(selectedDocuments, generateDocumentAsBlob, resolveConfig);
       clearAfterBulkDownload(selectedDocuments.map((doc) => doc.branch));
       // New bills were saved to DynamoDB — clear the History cache so the
       // next History visit shows them.
