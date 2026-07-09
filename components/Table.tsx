@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import TableRowComponent from "@/components/TableRow";
-import demoBranchData from "../demoBranches.json";
-import { useSession } from "next-auth/react";
+import { useConfig } from "@/contexts/ConfigContext";
 import {
   Table,
   TableBody,
@@ -12,39 +10,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface BranchItem {
-  id: number;
-  name: string;
-  template: string;
-  company: string;
-}
-
 const headCls = "text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap px-3";
 
 const TableComponent = () => {
-  const { data: session, status } = useSession();
-  const isDemo = session?.user?.role === "demo";
-  const [branches, setBranches] = useState<BranchItem[]>([]);
-
-  useEffect(() => {
-    // Wait until next-auth has resolved the session — avoids a double fetch
-    if (status === "loading") return;
-    if (isDemo) {
-      setBranches(demoBranchData);
-      return;
-    }
-
-    async function fetchBranches() {
-      try {
-        const res = await fetch("/api/config/branches");
-        const data = await res.json();
-        setBranches(data);
-      } catch {
-        setBranches([]);
-      }
-    }
-    fetchBranches();
-  }, [status, isDemo]);
+  // Branches come from the shared ConfigContext cache — fetched once on app
+  // load and reused across tab navigations (no re-fetch on mount).
+  const { branches } = useConfig();
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm w-full overflow-hidden">

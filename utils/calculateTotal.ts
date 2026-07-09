@@ -1,22 +1,41 @@
 import { IBranchConfig } from "@/interfaces/IBranchConfig";
-import { getBranchDetailsAsync } from "@/utils/getBranchDetails";
 
-const calculateTotal = async (hours: number, fuelPrice: number, branch: string): Promise<number> => {
+/**
+ * Minimal shape needed to calculate a bill total.
+ * Any object carrying template + consumption (+ optional cpm) works,
+ * so both IBranchConfig and the cached BranchRecord are accepted.
+ */
+export interface CalcConfig {
+    template: string;
+    consumption?: number;
+    cpm?: number;
+}
 
-    const branchDetails: IBranchConfig = await getBranchDetailsAsync(branch);
-    const template = branchDetails["template"];
+/**
+ * Pure, synchronous total calculation.
+ *
+ * The branch configuration is passed in by the caller (from the in-memory
+ * ConfigContext cache) — this function performs NO network calls, so it can
+ * run instantly on every keystroke.
+ *
+ * @param hours     Hours (or minutes, for MINUTES template) as a number
+ * @param fuelPrice Fuel price as a number
+ * @param config    Branch config providing template + consumption/cpm
+ */
+const calculateTotal = (
+    hours: number,
+    fuelPrice: number,
+    config: CalcConfig | IBranchConfig,
+): number => {
+    const template = config.template;
 
     if (template === "MINUTES") {
-        const cpm: number = branchDetails["cpm"] || 0;
+        const cpm: number = config.cpm || 0;
         const minutes: number = Number(hours);
         return minutes * cpm * fuelPrice;
     }
 
-    const consumption: number = branchDetails["consumption"];
-
-    // if(template === "START_AND_END") {
-    //     return hours * consumption * fuelPrice
-    // }
+    const consumption: number = config.consumption || 0;
 
     const decimalsMap: Map<number, number> = new Map<number, number>();
     decimalsMap.set(15, 0.25);

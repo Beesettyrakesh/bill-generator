@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const result = await dynamoDB.send(new ScanCommand({
       TableName: BRANCH_CONFIG_TABLE_NAME,
-      ProjectionExpression: 'branchName, company, template',
+      ProjectionExpression: 'branchName, company, template, consumption, cpm, genCapacity',
     }));
 
     const branches = (result.Items || [])
@@ -29,6 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name: item.branchName,
         template: item.template,
         company: item.company,
+        consumption: item.consumption,
+        cpm: item.cpm,
+        genCapacity: item.genCapacity,
       }));
 
     return res.status(200).json(branches);

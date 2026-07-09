@@ -1,7 +1,7 @@
 "use client";
 
-import { IBankBranch } from "@/interfaces/IBankBranch";
 import { useEffect } from "react";
+import type { BranchRecord } from "@/contexts/ConfigContext";
 import generateDocument, {
   generateDocumentAsBlob,
   DocumentErrorType,
@@ -35,7 +35,7 @@ interface ValidationErrors {
 }
 
 interface TableRowProps {
-  branch: IBankBranch;
+  branch: BranchRecord;
 }
 
 const TableRowComponent = (props: TableRowProps) => {
@@ -53,23 +53,29 @@ const TableRowComponent = (props: TableRowProps) => {
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const [total, setTotal] = useState<string>("");
 
-  // Derive total from hours + fuelPrice (async)
+  // Derive total from hours + fuelPrice — SYNCHRONOUS.
+  // Branch config (template/consumption/cpm) comes from props (cached in
+  // ConfigContext), so there is NO network call and no async race. This
+  // updates the total instantly as the user types.
   useEffect(() => {
     if (!hours || !fuelPrice || !branchName) {
       setTotal("");
       return;
     }
-    let cancelled = false;
-    calculateTotal(Number(hours), Number(fuelPrice), branchName)
-      .then((result) => {
-        if (!cancelled) setTotal(result.toFixed(2));
-      })
-      .catch(() => {
-        if (!cancelled) setTotal("");
-      });
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hours, fuelPrice, branchName]);
+    const parsedHours = Number(hours);
+    const parsedFuel = Number(fuelPrice);
+    if (isNaN(parsedHours) || isNaN(parsedFuel)) {
+      setTotal("");
+      return;
+    }
+    try {
+      const result = calculateTotal(parsedHours, parsedFuel, props.branch);
+      setTotal(result.toFixed(2));
+    } catch {
+      setTotal("");
+    }
+  }, [hours, fuelPrice, branchName, props.branch]);
+
 
   // Auto-populate startReading from previous bill's endReading for START_AND_END branches
   useEffect(() => {
