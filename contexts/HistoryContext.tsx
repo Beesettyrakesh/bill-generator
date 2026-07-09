@@ -37,11 +37,11 @@ interface HistoryContextType {
   setMonths: (months: string[]) => void;
 
   /**
-   * Returns cached bills for a given month+branch key, or null on cache miss.
+   * Returns cached bills for a given month, or null on cache miss.
    * Consumers fetch + setBills on a miss.
    */
-  getBills: (month: string, branch: string) => Bill[] | null;
-  setBills: (month: string, branch: string, bills: Bill[]) => void;
+  getBills: (month: string) => Bill[] | null;
+  setBills: (month: string, bills: Bill[]) => void;
 
   /**
    * Clears the entire history cache (months + all bills).
@@ -59,12 +59,10 @@ const HistoryContext = createContext<HistoryContextType>({
   invalidate: () => {},
 });
 
-const billsKey = (month: string, branch: string) => `${month}|${branch || "all"}`;
-
 export const HistoryProvider = ({ children }: { children: ReactNode }) => {
   // Months cache (null = not yet fetched).
   const monthsRef = useRef<string[] | null>(null);
-  // Per-key bills cache: "month|branch" -> Bill[].
+  // Per-month bills cache: month -> Bill[].
   const billsRef = useRef<Map<string, Bill[]>>(new Map());
 
   // A version counter forces consumers to re-render after invalidate(),
@@ -78,12 +76,12 @@ export const HistoryProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const getBills = useCallback(
-    (month: string, branch: string) => billsRef.current.get(billsKey(month, branch)) ?? null,
+    (month: string) => billsRef.current.get(month) ?? null,
     []
   );
 
-  const setBills = useCallback((month: string, branch: string, bills: Bill[]) => {
-    billsRef.current.set(billsKey(month, branch), bills);
+  const setBills = useCallback((month: string, bills: Bill[]) => {
+    billsRef.current.set(month, bills);
   }, []);
 
   const invalidate = useCallback(() => {

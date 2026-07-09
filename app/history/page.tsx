@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
-import { useConfig } from '@/contexts/ConfigContext';
 import { useHistory, type Bill } from '@/contexts/HistoryContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,16 +11,11 @@ import Navigation from '@/components/Navigation';
 export default function HistoryPage() {
   useSession({ required: true });
 
-  // Branch names come from the shared ConfigContext cache — no fetch here.
-  const { branches: branchRecords } = useConfig();
-  const branches = branchRecords.map((b) => b.name);
-
   // Months + bills are cached in HistoryContext and survive tab switches.
   const { getMonths, setMonths: cacheMonths, getBills, setBills: cacheBills } = useHistory();
 
   const [months, setMonthsState] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
-  const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [bills, setBills] = useState<Bill[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,14 +61,14 @@ export default function HistoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getMonths]);
 
-  // Load bills for the selected month/branch — from cache if present.
+  // Load bills for the selected month — from cache if present.
   useEffect(() => {
     let cancelled = false;
 
     async function loadBills() {
       if (!selectedMonth) { setBills([]); return; }
 
-      const cached = getBills(selectedMonth, selectedBranch);
+      const cached = getBills(selectedMonth);
       if (cached) {
         setBills(cached);
         return;
@@ -83,17 +77,14 @@ export default function HistoryPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const url = selectedBranch && selectedBranch !== 'all'
-          ? `/api/bills/by-month?month=${selectedMonth}&branchId=${selectedBranch}`
-          : `/api/bills/by-month?month=${selectedMonth}`;
-        const response = await fetch(url);
+        const response = await fetch(`/api/bills/by-month?month=${selectedMonth}`);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to fetch bills');
         }
         const data: Bill[] = await response.json();
         if (cancelled) return;
-        cacheBills(selectedMonth, selectedBranch, data);
+        cacheBills(selectedMonth, data);
         setBills(data);
       } catch (e) {
         if (cancelled) return;
@@ -106,9 +97,10 @@ export default function HistoryPage() {
 
     loadBills();
     return () => { cancelled = true; };
-    // getBills identity is stable (useCallback); re-runs on filter change or invalidation.
+    // getBills identity is stable (useCallback); re-runs on month change or invalidation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMonth, selectedBranch, getBills]);
+  }, [selectedMonth, getBills]);
+
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -145,22 +137,8 @@ export default function HistoryPage() {
               </SelectContent>
             </Select>
           </div>
-
-          <div className="w-full sm:w-56">
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Branch</label>
-            <Select value={selectedBranch} onValueChange={setSelectedBranch} disabled={isLoading || months.length === 0}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="All branches" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All branches</SelectItem>
-                {branches.map((branch) => (
-                  <SelectItem key={branch} value={branch}>{branch}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
+
 
         {/* Error */}
         {error && (
