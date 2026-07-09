@@ -3,6 +3,7 @@
 import { DocumentProvider } from '@/contexts/DocumentContext';
 import { BranchFormProvider } from '@/contexts/BranchFormContext';
 import { ConfigProvider } from '@/contexts/ConfigContext';
+import { HistoryProvider } from '@/contexts/HistoryContext';
 import DemoModeIndicator from '@/components/DemoModeIndicator';
 import UserNav from '@/components/UserNav';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -20,6 +21,7 @@ export default function ClientLayout({
 
   return (
     <ConfigProvider>
+    <HistoryProvider>
     <DocumentProvider>
       <BranchFormProvider>
         <ToastContextProvider>
@@ -47,6 +49,7 @@ export default function ClientLayout({
         </ToastContextProvider>
       </BranchFormProvider>
     </DocumentProvider>
+    </HistoryProvider>
     </ConfigProvider>
   );
 }

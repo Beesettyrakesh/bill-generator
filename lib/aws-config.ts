@@ -1,7 +1,14 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
+// Module-level singleton. On Vercel a warm serverless instance reuses this
+// across requests, keeping the underlying HTTPS/TLS connection alive instead
+// of paying a fresh handshake on every API call.
+let docClient: DynamoDBDocumentClient | null = null;
+
 const createDynamoDBClient = (): DynamoDBDocumentClient => {
+  if (docClient) return docClient;
+
   const client = new DynamoDBClient({
     region: process.env.AWS_REGION || 'us-east-1',
     credentials: {
@@ -9,8 +16,10 @@ const createDynamoDBClient = (): DynamoDBDocumentClient => {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
     },
   });
-  return DynamoDBDocumentClient.from(client);
+  docClient = DynamoDBDocumentClient.from(client);
+  return docClient;
 };
+
 
 const BILLS_TABLE_NAME = process.env.DYNAMODB_BILLS_TABLE as string;
 const DEMO_BILLS_TABLE_NAME = process.env.DYNAMODB_DEMO_BILLS_TABLE as string;

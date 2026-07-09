@@ -2,6 +2,7 @@
 
 import { useDocuments } from '@/contexts/DocumentContext';
 import { useBranchForm } from '@/contexts/BranchFormContext';
+import { useHistory } from '@/contexts/HistoryContext';
 import { useState } from 'react';
 import { downloadMergedPdf } from '@/utils/cloudConvertService';
 import { generateDocumentAsBlob } from '@/utils/generateDocument';
@@ -19,6 +20,7 @@ import {
 const DocumentList = () => {
   const { selectedDocuments, removeDocument, clearDocuments } = useDocuments();
   const { clearAfterBulkDownload } = useBranchForm();
+  const { invalidate: invalidateHistory } = useHistory();
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
@@ -31,6 +33,9 @@ const DocumentList = () => {
       setDownloadError(null);
       await downloadMergedPdf(selectedDocuments, generateDocumentAsBlob);
       clearAfterBulkDownload(selectedDocuments.map((doc) => doc.branch));
+      // New bills were saved to DynamoDB — clear the History cache so the
+      // next History visit shows them.
+      invalidateHistory();
       setIsProcessing(false);
     } catch (error) {
       console.error('Error downloading documents:', error);

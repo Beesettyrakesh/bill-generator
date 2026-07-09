@@ -10,6 +10,7 @@ import generateDocument, {
 import calculateTotal from "@/utils/calculateTotal";
 import { useDocuments } from "@/contexts/DocumentContext";
 import { useBranchForm } from "@/contexts/BranchFormContext";
+import { useHistory } from "@/contexts/HistoryContext";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ interface TableRowProps {
 const TableRowComponent = (props: TableRowProps) => {
   const { addDocument } = useDocuments();
   const { getFieldValues, updateField, clearAfterGenerate, clearAll } = useBranchForm();
+  const { invalidate: invalidateHistory } = useHistory();
   const toast = useToast();
 
   const branchName = props.branch.name;
@@ -244,6 +246,9 @@ const TableRowComponent = (props: TableRowProps) => {
       // Clear fields after successful generation — keep endReading and fuelPrice
       clearAfterGenerate(branchName);
       setErrors({});
+      // A new bill now exists in DynamoDB — clear the History cache so the
+      // next History visit re-fetches and shows it.
+      invalidateHistory();
     } catch (error) {
       console.error("Error generating document:", error);
 
