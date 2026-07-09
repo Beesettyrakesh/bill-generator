@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import type { BranchRecord } from "@/contexts/ConfigContext";
 import generateDocument, {
-  generateDocumentAsBlob,
   DocumentErrorType,
   DocumentGenerationError,
 } from "@/utils/generateDocument";
@@ -180,52 +179,30 @@ const TableRowComponent = (props: TableRowProps) => {
     return Object.keys(filteredErrors).length === 0;
   };
 
-  const handleAddDocument = async () => {
+  const handleAddDocument = () => {
     if (!total) return;
     if (!validateForm()) return;
 
-    try {
-      const formValues = {
-        branch: branchName,
-        date,
-        startReading,
-        endReading,
-        hours,
-        fuelPrice,
-        total,
-      };
+    const formValues = {
+      branch: branchName,
+      date,
+      startReading,
+      endReading,
+      hours,
+      fuelPrice,
+      total,
+    };
 
-      const docBlob = await generateDocumentAsBlob(formValues);
-      addDocument({ branch: branchName, formValues, docxBlob: docBlob });
-      toast({
-        title: "Added to queue",
-        description: `${branchName} has been added to the download queue.`,
-      });
-    } catch (error) {
-      console.error("Error adding document:", error);
-
-      if (error instanceof DocumentGenerationError) {
-        switch (error.type) {
-          case DocumentErrorType.TEMPLATE_NOT_FOUND:
-            console.error("Template error:", error.message);
-            break;
-          case DocumentErrorType.CONVERSION_FAILED:
-            console.error("Conversion error:", error.message);
-            break;
-          case DocumentErrorType.NETWORK_ERROR:
-            console.error("Network error:", error.message);
-            break;
-          case DocumentErrorType.API_ERROR:
-            console.error("API error:", error.message);
-            break;
-          default:
-            console.error("Unknown error:", error.message);
-        }
-      } else {
-        alert("Failed to add document. Please try again.");
-      }
-    }
+    // Store only formValues — the DOCX blob is generated fresh (from cached
+    // config) at download time, so pre-generating it here is unnecessary.
+    // This makes the "Add" action — and its toast — instant.
+    addDocument({ branch: branchName, formValues });
+    toast({
+      title: "Added to queue",
+      description: `${branchName} has been added to the download queue.`,
+    });
   };
+
 
   const validateAndGenerateDocument = async () => {
     if (!validateForm()) return;
