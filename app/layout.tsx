@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import ClientSessionProvider from "./client-session-provider";
+import ClientLayout from "./client-layout";
 import { ThemeProvider } from "next-themes";
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className="overflow-x-hidden">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <ClientSessionProvider>{children}</ClientSessionProvider>
+          <ClientSessionProvider>
+            <ClientLayout>{children}</ClientLayout>
+          </ClientSessionProvider>
         </ThemeProvider>
       </body>
     </html>

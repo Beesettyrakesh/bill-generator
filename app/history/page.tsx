@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { useHistory, type Bill } from '@/contexts/HistoryContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import ClientLayout from '../client-layout';
 import Navigation from '@/components/Navigation';
 
 export default function HistoryPage() {
@@ -112,7 +111,6 @@ export default function HistoryPage() {
   };
 
   return (
-    <ClientLayout>
       <div className="space-y-6">
         <Navigation />
 
@@ -186,6 +184,5 @@ export default function HistoryPage() {
           )}
         </div>
       </div>
-    </ClientLayout>
   );
 }

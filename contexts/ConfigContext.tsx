@@ -103,15 +103,18 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Wait for the session to resolve so we know demo vs real user.
-    if (status === "loading") return;
-    // Only fetch once — this provider lives in the layout and persists
-    // across tab navigations, so we never re-fetch on route change.
+    // Only fetch once authenticated. The provider now lives at the root
+    // layout (so it also mounts on /login) — guarding on "authenticated"
+    // avoids a wasted 401 fetch before the user logs in.
+    if (status !== "authenticated") return;
+    // Only fetch once — this provider persists across tab navigations,
+    // so we never re-fetch on route change.
     if (fetchedRef.current) return;
     fetchedRef.current = true;
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isDemo]);
+
 
   const getBranch = (name: string): BranchRecord | undefined =>
     branches.find((b) => b.name === name);

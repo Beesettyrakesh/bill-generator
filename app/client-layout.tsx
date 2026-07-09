@@ -25,27 +25,34 @@ export default function ClientLayout({
     <DocumentProvider>
       <BranchFormProvider>
         <ToastContextProvider>
-        <DemoModeIndicator />
-        {/* Slim top header */}
-        <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-            <span className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
-              Billezy
-            </span>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <ThemeToggle />
-              {!isLoginPage && <UserNav />}
-            </div>
-          </div>
-        </header>
+          {isLoginPage ? (
+            // Login page has its own full-screen layout — no app chrome.
+            children
+          ) : (
+            <>
+              <DemoModeIndicator />
+              {/* Slim top header */}
+              <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
+                <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+                  <span className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+                    Billezy
+                  </span>
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <ThemeToggle />
+                    <UserNav />
+                  </div>
+                </div>
+              </header>
 
-        <main className="flex-1 max-w-screen-xl mx-auto w-full px-4 sm:px-6 py-4 sm:py-8">
-          {children}
-        </main>
+              <main className="flex-1 max-w-screen-xl mx-auto w-full px-4 sm:px-6 py-4 sm:py-8">
+                {children}
+              </main>
 
-        <footer className="border-t border-border py-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Billezy
-        </footer>
+              <footer className="border-t border-border py-4 text-center text-sm text-muted-foreground">
+                &copy; {new Date().getFullYear()} Billezy
+              </footer>
+            </>
+          )}
         </ToastContextProvider>
       </BranchFormProvider>
     </DocumentProvider>
@@ -53,3 +60,4 @@ export default function ClientLayout({
     </ConfigProvider>
   );
 }
+

@@ -6,7 +6,6 @@ import { useEffect } from "react";
 import Table from "@/components/Table";
 import DocumentList from "@/components/DocumentList";
 import Navigation from "@/components/Navigation";
-import ClientLayout from "./client-layout";
 
 export default function Home() {
   const { status } = useSession();
@@ -28,13 +27,11 @@ export default function Home() {
 
   if (status === "authenticated") {
     return (
-      <ClientLayout>
-        <div className="space-y-6">
-          <Navigation />
-          <Table />
-          <DocumentList />
-        </div>
-      </ClientLayout>
+      <div className="space-y-6">
+        <Navigation />
+        <Table />
+        <DocumentList />
+      </div>
     );
   }
 
