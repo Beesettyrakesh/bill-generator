@@ -22,7 +22,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import formatHours from "@/utils/formatHours";
+import { elapsedHHMM } from "@/utils/timeMath";
 import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
 
@@ -92,17 +92,18 @@ const TableRowComponent = (props: TableRowProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-calculate hours for START_AND_END when startReading/endReading change
+  // Auto-calculate hours for START_AND_END when startReading/endReading change.
+  // Readings are HH.MM clock time (e.g. 578.45 = 578h45m), so the elapsed time
+  // must be computed via total-minutes with a borrow across the hour — NOT a
+  // decimal subtraction. elapsedHHMM("578.45","579.15") -> "00.30".
   useEffect(() => {
     if (
       props.branch.template === "START_AND_END" &&
       startReading &&
       endReading
     ) {
-      const start = Number(startReading);
-      const end = Number(endReading);
-      if (!isNaN(start) && !isNaN(end) && end > start) {
-        const calculatedHours = formatHours((end - start).toString(), "START_AND_END");
+      const calculatedHours = elapsedHHMM(startReading, endReading);
+      if (calculatedHours) {
         updateField(branchName, "hours", calculatedHours);
       }
     }
